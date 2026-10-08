@@ -7,8 +7,9 @@
     "StateTrackedStorageMixin",
     "ConfiguredStorageMixin",
     "RootStorageMixin",
-    "GridContainerMenuMixin"
+    "GridContainerMenuMixin",
+    "DiskDriveContainerMenuMixin"
   ],
-  "client": ["client.GridResourceMixin"],
+  "client": ["client.GridResourceMixin", "client.DiskDriveTooltipMixin"],
   "injectors": {"defaultRequire": 1}
 }

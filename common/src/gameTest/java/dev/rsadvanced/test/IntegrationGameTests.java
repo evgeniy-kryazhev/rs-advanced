@@ -15,6 +15,7 @@ public final class IntegrationGameTests {
                 create("absorbed_returns", StorageIntegrationTest::returnedResourcesAreAbsorbedWithoutCacheGrowth),
                 create("insertion_priorities", StorageIntegrationTest::insertionPreservesFiniteStockPrioritiesAndVoidExcess),
                 create("grid_returns", GridInsertionTest::gridReturnsCobblestoneAndEmptiesWaterBucket),
+                create("drive_display", DiskDriveDisplayTest::driveStatisticsExcludeInfiniteDisks),
                 create("access_and_removal", StorageIntegrationTest::multipleDisksAndAccessChangesUpdateInfinityMetadata),
                 create("storage_codec", StorageIntegrationTest::sourceCodecStoresOnlyItsTypeSpecificEmptyState),
                 create("disk_inventory_reload", DiskResourcesTest::standardDriveAcceptsDisksAndReloadsTheirStatelessItemStacks),

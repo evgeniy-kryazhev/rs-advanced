@@ -20,6 +20,10 @@ public final class InfiniteDiskItem extends Item implements StorageContainerItem
         this.diskType = diskType;
     }
 
+    public InfiniteDiskType diskType() {
+        return diskType;
+    }
+
     @Override
     public Optional<SerializableStorage> resolve(StorageRepository repository, ItemStack stack) {
         // Each slot gets its own source, while all state is determined by the item type.
@@ -28,7 +32,8 @@ public final class InfiniteDiskItem extends Item implements StorageContainerItem
 
     @Override
     public Optional<StorageInfo> getInfo(StorageRepository repository, ItemStack stack) {
-        return Optional.of(new StorageInfo(InfiniteResourceStorage.ADVERTISED_AMOUNT, 0));
+        // UI metadata describes physical stock, not the source's virtual availability.
+        return Optional.of(new StorageInfo(0, 0));
     }
 
     @Override
