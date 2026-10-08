@@ -5,6 +5,7 @@ import com.refinedmods.refinedstorage.api.network.impl.storage.AbstractConfigure
 import com.refinedmods.refinedstorage.api.network.impl.storage.StorageConfiguration;
 import com.refinedmods.refinedstorage.api.resource.ResourceAmount;
 import com.refinedmods.refinedstorage.api.resource.ResourceKey;
+import com.refinedmods.refinedstorage.api.resource.filter.FilterMode;
 import com.refinedmods.refinedstorage.api.storage.Actor;
 import com.refinedmods.refinedstorage.api.storage.Storage;
 import com.refinedmods.refinedstorage.api.storage.composite.CompositeAwareChild.Amount;
@@ -61,5 +62,26 @@ public abstract class ConfiguredStorageMixin implements InfiniteSource {
             }
         }
         return 0;
+    }
+
+    @Inject(method = "compositeInsert", at = @At("HEAD"), cancellable = true, require = 1)
+    private void rsadvanced$preserveInfiniteInsertionBalance(
+            ResourceKey resource, long amount, Action action, Actor actor, CallbackInfoReturnable<Amount> callback) {
+        if (!(delegate instanceof CompositeStorageImpl) || !InfiniteSources.contains(delegate, resource)) {
+            return;
+        }
+        if (!config.isActive() || config.getAccessMode().isExtractOnly() || !config.isAllowed(resource)) {
+            callback.setReturnValue(Amount.ZERO);
+            return;
+        }
+
+        long before = rsadvanced$getAmount(resource);
+        long inserted = delegate.insert(resource, amount, action, actor);
+        long cacheChange = action == Action.EXECUTE ? rsadvanced$getAmount(resource) - before : 0;
+        // Only resources kept by ordinary disks increase the parent cache.
+        if (config.isVoidExcess() && config.getFilterMode() == FilterMode.ALLOW && inserted < amount) {
+            inserted = amount;
+        }
+        callback.setReturnValue(new Amount(inserted, cacheChange));
     }
 }

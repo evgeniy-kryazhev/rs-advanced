@@ -53,7 +53,7 @@ class InfiniteResourceStorageTest {
     }
 
     @Test
-    void insertionContinuesToOrdinaryStorage() {
+    void insertionIsAbsorbedWithoutGrowingSourceOrComposite() {
         CompositeStorageImpl composite = new CompositeStorageImpl(MutableResourceListImpl.create());
         InfiniteResourceStorage source = new InfiniteResourceStorage(RESOURCE, TYPE);
         StorageImpl ordinary = new StorageImpl(MutableResourceListImpl.create());
@@ -61,16 +61,21 @@ class InfiniteResourceStorageTest {
         composite.addSource(ordinary);
 
         assertEquals(64, composite.insert(RESOURCE, 64, Action.EXECUTE, Actor.EMPTY));
-        assertEquals(64, ordinary.getStored());
-        assertEquals(InfiniteResourceStorage.ADVERTISED_AMOUNT + 64, composite.getStored());
+        assertEquals(0, ordinary.getStored());
+        for (Action action : Action.values()) {
+            assertEquals(Long.MAX_VALUE, composite.insert(RESOURCE, Long.MAX_VALUE, action, Actor.EMPTY));
+            assertEquals(InfiniteResourceStorage.ADVERTISED_AMOUNT, composite.getStored());
+            assertEquals(InfiniteResourceStorage.ADVERTISED_AMOUNT, composite.getAll().iterator().next().amount());
+        }
     }
 
     @Test
-    void rejectsForeignResourcesInsertionAndInvalidAmounts() {
+    void acceptsOwnResourceAndRejectsForeignResourcesAndInvalidAmounts() {
         InfiniteResourceStorage source = new InfiniteResourceStorage(RESOURCE, TYPE);
         for (Action action : Action.values()) {
             assertEquals(0, source.extract(new TestResource("stone"), 64, action, Actor.EMPTY));
-            assertEquals(0, source.insert(RESOURCE, 64, action, Actor.EMPTY));
+            assertEquals(64, source.insert(RESOURCE, 64, action, Actor.EMPTY));
+            assertEquals(0, source.insert(new TestResource("stone"), 64, action, Actor.EMPTY));
             assertThrows(IllegalArgumentException.class, () -> source.extract(RESOURCE, 0, action, Actor.EMPTY));
             assertThrows(IllegalArgumentException.class, () -> source.insert(RESOURCE, -1, action, Actor.EMPTY));
         }

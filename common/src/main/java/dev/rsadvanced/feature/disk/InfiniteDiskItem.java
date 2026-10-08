@@ -36,6 +36,6 @@ public final class InfiniteDiskItem extends Item implements StorageContainerItem
         super.appendHoverText(stack, context, tooltip, flag);
         tooltip.add(Component.translatable("tooltip.rsadvanced.infinite_source").withStyle(ChatFormatting.AQUA));
         tooltip.add(Component.translatable("tooltip.rsadvanced.disk_drive").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.translatable("tooltip.rsadvanced.extraction_only").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("tooltip.rsadvanced.absorbs_returns").withStyle(ChatFormatting.GRAY));
     }
 }

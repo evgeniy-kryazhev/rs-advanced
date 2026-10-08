@@ -41,7 +41,7 @@ public class DiskResourcesTest {
             var source = inventory.resolve(0).orElseThrow();
             assertEquals(64, source.extract(diskType.resource(), 64, Action.EXECUTE, Actor.EMPTY));
             assertEquals(64, source.extract(diskType.resource(), 64, Action.EXECUTE, Actor.EMPTY));
-            assertEquals(0, source.insert(diskType.resource(), 64, Action.EXECUTE, Actor.EMPTY));
+            assertEquals(64, source.insert(diskType.resource(), 64, Action.EXECUTE, Actor.EMPTY));
         }
     }
 

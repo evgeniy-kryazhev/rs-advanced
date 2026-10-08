@@ -30,7 +30,8 @@ public abstract class StateTrackedStorageMixin implements CompositeAwareChild, I
     @Override
     public Amount compositeInsert(ResourceKey resource, long amount, Action action, Actor actor) {
         long inserted = ((StateTrackedStorage) (Object) this).insert(resource, amount, action, actor);
-        return new Amount(inserted, inserted);
+        long cacheChange = delegate instanceof InfiniteResourceStorage ? 0 : inserted;
+        return new Amount(inserted, cacheChange);
     }
 
     @Override

@@ -38,7 +38,8 @@ public final class InfiniteResourceStorage implements SerializableStorage, Compo
         ResourceAmount.validate(requestedResource, amount);
         Objects.requireNonNull(action);
         Objects.requireNonNull(actor);
-        return 0;
+        // Matching resources are absorbed without creating a finite balance.
+        return resource.equals(requestedResource) ? amount : 0;
     }
 
     @Override
@@ -50,8 +51,8 @@ public final class InfiniteResourceStorage implements SerializableStorage, Compo
 
     @Override
     public Amount compositeInsert(ResourceKey requestedResource, long amount, Action action, Actor actor) {
-        insert(requestedResource, amount, action, actor);
-        return Amount.ZERO;
+        long inserted = insert(requestedResource, amount, action, actor);
+        return new Amount(inserted, 0);
     }
 
     @Override

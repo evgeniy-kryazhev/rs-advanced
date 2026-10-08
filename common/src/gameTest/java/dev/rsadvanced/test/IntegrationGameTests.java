@@ -12,6 +12,9 @@ public final class IntegrationGameTests {
     public Collection<TestFunction> generateTests() {
         return List.of(
                 create("mixed_disks", StorageIntegrationTest::diskWrappersPreserveInfiniteStockAndOrdinaryStock),
+                create("absorbed_returns", StorageIntegrationTest::returnedResourcesAreAbsorbedWithoutCacheGrowth),
+                create("insertion_priorities", StorageIntegrationTest::insertionPreservesFiniteStockPrioritiesAndVoidExcess),
+                create("grid_returns", GridInsertionTest::gridReturnsCobblestoneAndEmptiesWaterBucket),
                 create("access_and_removal", StorageIntegrationTest::multipleDisksAndAccessChangesUpdateInfinityMetadata),
                 create("storage_codec", StorageIntegrationTest::sourceCodecStoresOnlyItsTypeSpecificEmptyState),
                 create("disk_inventory_reload", DiskResourcesTest::standardDriveAcceptsDisksAndReloadsTheirStatelessItemStacks),
@@ -28,7 +31,7 @@ public final class IntegrationGameTests {
             try {
                 check.run(helper);
                 helper.succeed();
-            } catch (Exception exception) {
+            } catch (Exception | AssertionError exception) {
                 throw new IllegalStateException("Integration check failed: " + name, exception);
             }
         });
