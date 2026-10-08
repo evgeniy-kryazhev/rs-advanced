@@ -2,6 +2,7 @@
 **/build/
 **/run/
 .reference/
+.architectury-transformer/
 .idea/
 .vscode/
 *.iml

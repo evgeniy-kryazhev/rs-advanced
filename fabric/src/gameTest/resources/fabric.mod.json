@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "rsadvanced_test",
+  "version": "1.0.0",
+  "name": "RS Advanced Integration Tests",
+  "environment": "server",
+  "entrypoints": {
+    "fabric-gametest": ["dev.rsadvanced.test.IntegrationGameTests"]
+  },
+  "depends": {
+    "rsadvanced": "*",
+    "fabric-gametest-api-v1": "*"
+  }
+}

@@ -1,0 +1,56 @@
+// Integration checks are a separate development mod and never enter release JARs.
+sourceSets {
+    gameTest {
+        java.srcDir rootProject.file('common/src/gameTest/java')
+        resources.srcDir rootProject.file('common/src/gameTest/resources')
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+
+loom {
+    mods {
+        rsadvanced {
+            sourceSet sourceSets.main
+        }
+        if (project.name == 'fabric') {
+            rsadvanced_test {
+                sourceSet sourceSets.gameTest
+            }
+        }
+    }
+    runs {
+        gameTest {
+            if (project.name == 'fabric') {
+                inherit server
+                property 'fabric-api.gametest'
+                property 'fabric-api.gametest.report-file', project.layout.buildDirectory.file('reports/gameTest/results.xml').get().asFile.absolutePath
+            } else {
+                mods {
+                    rsadvanced {
+                        sourceSet sourceSets.main
+                    }
+                    rsadvanced_test {
+                        sourceSet sourceSets.gameTest
+                    }
+                }
+                environment 'gametestserver'
+                forgeTemplate 'gameTestServer'
+                property 'rsadvanced.test.reportFile', project.layout.buildDirectory.file('reports/gameTest/results.xml').get().asFile.absolutePath
+            }
+            source sourceSets.gameTest
+            runDir 'build/run/gameTest'
+        }
+    }
+}
+
+tasks.named('runGameTest') {
+    dependsOn tasks.named('gameTestClasses')
+    doFirst {
+        project.layout.buildDirectory.dir('reports/gameTest').get().asFile.mkdirs()
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('runGameTest')
+}

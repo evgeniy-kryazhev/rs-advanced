@@ -31,3 +31,10 @@ side="BOTH"
 
 [[mixins]]
 config="rsadvanced.mixins.json"
+
+[[dependencies.rsadvanced]]
+modId="architectury"
+type="required"
+versionRange="[${architecturyApiVersion},)"
+ordering="AFTER"
+side="BOTH"

@@ -1,4 +1,4 @@
-package dev.rsadvanced.neoforge;
+package dev.rsadvanced.test;
 
 import com.mojang.serialization.JsonOps;
 import com.refinedmods.refinedstorage.api.core.Action;
@@ -13,17 +13,16 @@ import com.refinedmods.refinedstorage.api.storage.root.RootStorageImpl;
 import dev.rsadvanced.feature.disk.InfiniteDiskType;
 import dev.rsadvanced.feature.disk.InfiniteResourceStorage;
 import dev.rsadvanced.feature.disk.InfiniteSources;
-import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Runs in NeoForge's transformed test environment, using the actual Disk Drive wrapper chain. */
-class StorageIntegrationTest {
-    @Test
-    void diskWrappersPreserveInfiniteStockAndOrdinaryStock() {
+import static dev.rsadvanced.test.TestAssertions.assertEquals;
+import static dev.rsadvanced.test.TestAssertions.assertFalse;
+import static dev.rsadvanced.test.TestAssertions.assertInstanceOf;
+import static dev.rsadvanced.test.TestAssertions.assertTrue;
+
+/** Runs on both loaders, using the actual Disk Drive wrapper chain. */
+public class StorageIntegrationTest {
+    public static void diskWrappersPreserveInfiniteStockAndOrdinaryStock() {
         for (InfiniteDiskType diskType : InfiniteDiskType.values()) {
             ResourceKey resource = diskType.resource();
             StorageNetworkNode driveNode = new StorageNetworkNode(1, 1, 8);
@@ -60,8 +59,7 @@ class StorageIntegrationTest {
         }
     }
 
-    @Test
-    void multipleDisksAndAccessChangesUpdateInfinityMetadata() {
+    public static void multipleDisksAndAccessChangesUpdateInfinityMetadata() {
         InfiniteDiskType diskType = InfiniteDiskType.COBBLESTONE;
         ResourceKey resource = diskType.resource();
         StorageNetworkNode node = new StorageNetworkNode(1, 1, 8);
@@ -89,8 +87,7 @@ class StorageIntegrationTest {
         assertFalse(InfiniteSources.contains(network, resource));
     }
 
-    @Test
-    void sourceCodecStoresOnlyItsTypeSpecificEmptyState() {
+    public static void sourceCodecStoresOnlyItsTypeSpecificEmptyState() {
         for (InfiniteDiskType diskType : InfiniteDiskType.values()) {
             var codec = diskType.getMapCodec(() -> { }).codec();
             var encoded = codec.encodeStart(JsonOps.INSTANCE, diskType.create(null, () -> { })).getOrThrow();
@@ -102,3 +99,4 @@ class StorageIntegrationTest {
         }
     }
 }
+

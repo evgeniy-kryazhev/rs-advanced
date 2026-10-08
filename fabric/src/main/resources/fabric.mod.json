@@ -7,13 +7,13 @@
   "license": "MIT",
   "environment": "*",
   "entrypoints": {
-    "main": ["dev.rsadvanced.fabric.RSAdvancedFabric"],
-    "client": ["dev.rsadvanced.fabric.RSAdvancedFabricClient"]
+    "main": ["dev.rsadvanced.fabric.RSAdvancedFabric"]
   },
   "mixins": ["rsadvanced.mixins.json"],
   "depends": {
     "fabricloader": ">=${fabricLoaderVersion}",
     "fabric-api": "*",
+    "architectury": ">=${architecturyApiVersion}",
     "minecraft": "${minecraftVersion}",
     "java": ">=21",
     "refinedstorage": "${refinedStorageVersion}"

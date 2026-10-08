@@ -1,16 +1,19 @@
 package dev.rsadvanced;
 
 import dev.rsadvanced.feature.AdvancedFeatures;
+import dev.rsadvanced.content.AdvancedContent;
+import dev.rsadvanced.network.AdvancedNetworking;
 import dev.rsadvanced.network.InfiniteResourcesPayload;
-import java.util.Objects;
-import java.util.function.BiConsumer;
+import dev.rsadvanced.network.InfiniteGridMenu;
+import dev.architectury.event.events.common.LifecycleEvent;
+import dev.architectury.event.events.common.TickEvent;
+import dev.architectury.networking.NetworkManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
-/** Shared bootstrap for RS Advanced features; loader-specific registration stays outside the core. */
+/** Shared Architectury bootstrap for every RS Advanced feature. */
 public final class RSAdvanced {
     public static final String MOD_ID = "rsadvanced";
-    private static BiConsumer<ServerPlayer, InfiniteResourcesPayload> payloadSender;
 
     private RSAdvanced() {
     }
@@ -19,12 +22,20 @@ public final class RSAdvanced {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
     }
 
-    public static void initialize(BiConsumer<ServerPlayer, InfiniteResourcesPayload> sender) {
-        payloadSender = Objects.requireNonNull(sender);
-        AdvancedFeatures.initialize();
+    public static void initialize() {
+        AdvancedContent.register();
+        AdvancedNetworking.register();
+        LifecycleEvent.SETUP.register(AdvancedFeatures::initialize);
+        TickEvent.SERVER_POST.register(server -> {
+            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                if (player.containerMenu instanceof InfiniteGridMenu menu) {
+                    menu.rsadvanced$synchronize(player);
+                }
+            }
+        });
     }
 
     public static void sendInfiniteResources(ServerPlayer player, InfiniteResourcesPayload payload) {
-        Objects.requireNonNull(payloadSender, "RS Advanced has not been initialized").accept(player, payload);
+        NetworkManager.sendToPlayer(player, payload);
     }
 }

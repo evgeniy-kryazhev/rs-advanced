@@ -1,16 +1,12 @@
-plugins {
-    id 'net.neoforged.moddev'
-}
-
-neoForge {
-    version = rootProject.neoforge_version
+architectury {
+    common(rootProject.enabled_platforms.split(','))
 }
 
 dependencies {
-    compileOnly "com.refinedmods.refinedstorage:refinedstorage-neoforge:${rootProject.refined_storage_version}"
-    testImplementation "com.refinedmods.refinedstorage:refinedstorage-neoforge:${rootProject.refined_storage_version}"
+    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+    modImplementation "dev.architectury:architectury:${rootProject.architectury_api_version}"
+    modImplementation "com.refinedmods.refinedstorage:refinedstorage-fabric:${rootProject.refined_storage_version}"
     testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testImplementation 'com.mojang:datafixerupper:8.0.16'
 }

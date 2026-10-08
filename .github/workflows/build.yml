@@ -19,3 +19,15 @@ jobs:
           path: |
             neoforge/build/libs/rsadvanced-neoforge-*.jar
             fabric/build/libs/rsadvanced-fabric-*.jar
+            !**/*-sources.jar
+            !**/*-dev.jar
+            !**/*-dev-shadow.jar
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            common/build/reports/tests/test/
+            fabric/build/reports/gameTest/
+            neoforge/build/reports/gameTest/
