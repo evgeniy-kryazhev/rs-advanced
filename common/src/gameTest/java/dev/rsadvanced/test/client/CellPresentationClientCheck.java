@@ -97,7 +97,7 @@ public final class CellPresentationClientCheck {
                 try {
                     checkNames(minecraft, "en_us", "Pack Stone", "Pack Water", "Pack Housing");
                     checkNames(minecraft, "ru_ru", "Камень сборки", "Вода сборки", "Корпус сборки");
-                    finish(minecraft, null);
+                    showOverlayPreview(minecraft);
                 } catch (Exception | AssertionError exception) {
                     finish(minecraft, exception);
                 }
@@ -242,6 +242,57 @@ public final class CellPresentationClientCheck {
         } finally {
             minecraft.options.forceUnicodeFont().set(originalUnicode);
         }
+    }
+
+    private static void showOverlayPreview(Minecraft minecraft) {
+        minecraft.setScreen(new net.minecraft.client.gui.screens.Screen(Component.literal("Cell resource icons")) {
+            private int renderedFrames;
+
+            @Override
+            public void render(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+                graphics.fill(0, 0, width, height, 0xFF25282E);
+                graphics.drawCenteredString(font, "RS Advanced: supplied sprites and dynamic resource icons",
+                        width / 2, 20, 0xFFFFFFFF);
+                List<ItemStack> cells = List.of(
+                        new ItemStack(AdvancedContent.ITEM_DISK.get()),
+                        previewCell("rsadvanced:cobblestone", DiskResourceKind.ITEM),
+                        new ItemStack(AdvancedContent.FLUID_DISK.get()),
+                        previewCell("rsadvanced:water", DiskResourceKind.FLUID),
+                        previewCell("my_pack:lava", DiskResourceKind.FLUID),
+                        previewCell("rsadvanced_test:red_wool", DiskResourceKind.ITEM));
+                List<String> labels = List.of("Base item", "Cobblestone", "Base fluid", "Water", "Lava", "Red wool");
+                int spacing = Math.min(80, (width - 16) / cells.size());
+                int startX = (width - cells.size() * spacing) / 2;
+                for (int index = 0; index < cells.size(); index++) {
+                    int x = startX + index * spacing;
+                    graphics.pose().pushPose();
+                    graphics.pose().translate(x, 60, 0);
+                    graphics.pose().scale(4, 4, 1);
+                    graphics.renderItem(cells.get(index), 0, 0);
+                    graphics.pose().popPose();
+                    graphics.drawCenteredString(font, labels.get(index), x + 32, 135, 0xFFFFFFFF);
+                    graphics.renderItem(cells.get(index), x + 24, 160);
+                }
+                graphics.flush();
+                renderedFrames++;
+                if (renderedFrames == 8) {
+                    Path screenshot = Path.of(System.getProperty("rsadvanced.test.clientReport"))
+                            .resolveSibling("cell-resource-icons.png");
+                    try (var pixels = net.minecraft.client.Screenshot.takeScreenshot(minecraft.getMainRenderTarget())) {
+                        pixels.writeToFile(screenshot);
+                        finish(minecraft, null);
+                    } catch (Exception exception) {
+                        finish(minecraft, exception);
+                    }
+                }
+            }
+
+            private ItemStack previewCell(String definition, DiskResourceKind kind) {
+                var id = ResourceLocation.parse(definition);
+                assertTrue(CellDefinitions.displayDefinition(id).isPresent());
+                return AdvancedContent.cell(id, kind);
+            }
+        });
     }
 
     private static void finish(Minecraft minecraft, Throwable failure) {

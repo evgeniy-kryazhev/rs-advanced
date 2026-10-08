@@ -10,6 +10,13 @@
     "GridContainerMenuMixin",
     "DiskDriveContainerMenuMixin"
   ],
-  "client": ["client.GridResourceMixin", "client.DiskDriveTooltipMixin", "client.DiskModelRegistrationMixin"],
-  "injectors": {"defaultRequire": 1}
+  "client": [
+    "client.GridResourceMixin",
+    "client.DiskDriveTooltipMixin",
+    "client.DiskModelRegistrationMixin",
+    "client.CellResourceOverlayMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
 }

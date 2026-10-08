@@ -11,7 +11,7 @@ An addon for **Refined Storage 2** that expands storage and automation. Includes
 - **Infinite Cobblestone Cell** — an endless source of cobblestone.
 - **Infinite Water Cell** — an endless source of water.
 
-Infinite cells appear in the Refined Storage creative tab. Hold Shift over a cell to view its help tooltip.
+Each cell shows a small resource icon in its lower-right corner in inventories. Infinite cells appear in the Refined Storage creative tab. Hold Shift over a cell to view its help tooltip.
 
 Craft an Infinite Storage Part from a 64K Storage Part and a Nether Star. Combine it with a Storage Housing and the cell's resource (a bucket for fluids) to craft a cell.
 
