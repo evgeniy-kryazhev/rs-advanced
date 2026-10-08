@@ -1,136 +1,36 @@
+<p align="center">
+  <img src="docs/assets/rsadvanced-icon.png" alt="RS Advanced logo" width="256">
+</p>
+
 # RS Advanced
 
-Расширяемый аддон для **Refined Storage 2**, Minecraft **1.21.1**, Java **21**.
-Поддерживаются NeoForge и Fabric. Первая версия требует **RS2 2.0.9**
-и **Architectury API 13.0.11 или новее** для соответствующего загрузчика.
+An addon for **Refined Storage 2** that expands storage and automation. Currently adds infinite cobblestone and water cells.
 
-Бесконечные диски — первая возможность RS Advanced. Название мода, его вкладка,
-общее ядро и платформенные точки входа рассчитаны на дальнейшие расширения RS2.
+## Features
 
-## Бесконечные диски
+- **Infinite Cobblestone Cell** — an endless source of cobblestone.
+- **Infinite Water Cell** — an endless source of water.
 
-| Предмет | Ресурс |
-| --- | --- |
-| `rsadvanced:infinite_cobblestone_disk` | Булыжник, `minecraft:cobblestone` |
-| `rsadvanced:infinite_water_disk` | Жидкость `minecraft:water` |
+Install a cell in a standard **Disk Drive** connected to a powered RS network. Access its resource through the Grid or automation devices.
 
-Установите диск в обычный Disk Drive подключённой и питаемой сети RS2.
-Ресурс появляется сразу. Диски не требуют заполнения и не опустошаются.
-Grid показывает **∞**, когда источник доступен для извлечения.
-В подсказке индикатора Disk Drive бесконечные источники перечислены отдельно
-с символом ∞, по одной строке на вид ресурса. Количество, ёмкость и заполнение
-учитывают только обычные диски; служебный миллиард в интерфейсе привода не показывается.
-Установленные ячейки используют стандартные модели дисков RS2: предметную
-для булыжника и жидкостную для воды. Иконки предметов в инвентаре остаются собственными.
-Поддерживаются обычный Grid, жидкостный вид, Crafting Grid и Wireless Grid.
+Cells need no initial filling and never run out. They also absorb returned resources of their own type without accumulating them. Infinite sources are marked with **∞**; ordinary disks keep their normal storage behavior and priorities.
 
-Диски выдают свой ресурс и принимают его обратно без накопления, как бесконечные
-ячейки ExtendedAE. Возвращённые булыжник и вода поглощаются; чужие ресурсы
-отклоняются. Воду возвращайте через штатное опустошение контейнера в жидкостном
-виде Grid: после ведра воды остаётся пустое ведро. Обычные диски могут принять
-ресурс раньше бесконечной ячейки согласно стандартным приоритетам RS2.
-Настройки питания, доступа, приоритетов, фильтров вставки и скорости устройств
-остаются под управлением RS2. Включённая в самом приводе утилизация излишков
-сохраняет стандартное поведение RS2.
+## Installation
 
-Рецепты без формы:
+For **Minecraft 1.21.1** with **NeoForge 21.1.256+** or **Fabric Loader 0.17.2+**. Requires Java 21.
 
-- Булыжник: корпус диска RS2, ведро воды, ведро лавы и булыжник.
-- Вода: корпус диска RS2 и два ведра воды.
+Install RS Advanced on both the client and server, together with:
 
-Пустые вёдра возвращаются по стандартным правилам крафта Minecraft.
-Предметы также доступны во вкладке **RS Advanced** и через `/give`.
+- **Refined Storage 2.0.9** and its required dependencies.
+- **Architectury API 13.0.11+**.
+- **Fabric API** for the Fabric version.
 
-Disk Interface может бесконечно извлекать ресурс из такого диска, соблюдая
-обычную квоту переноса RS2. Использовать его для опустошения диска бессмысленно.
+Use the release JAR matching your loader. Forge is not supported.
 
-## Сборка и установка
+## Build
 
-Установите JDK 21 и выполните в корне проекта:
+With JDK 21 installed, run `gradlew.bat build` on Windows or `bash gradlew build` on Linux/macOS. Release JARs are in `fabric/build/libs` and `neoforge/build/libs`; use the files without `dev` or `sources` in their names.
 
-```powershell
-.\gradlew.bat build
-```
+See [development notes](docs/DEVELOPMENT.md) and [validation results](VALIDATION.md) for architecture, tests, and known limitations.
 
-Linux/macOS: `bash gradlew build`.
-
-- NeoForge: `neoforge/build/libs/rsadvanced-neoforge-0.1.0.jar`.
-- Fabric: `fabric/build/libs/rsadvanced-fabric-0.1.0.jar`.
-
-Установите соответствующий JAR на клиент и сервер вместе с RS2 2.0.9
-и Architectury API 13.0.11+.
-Для Fabric также требуется Fabric API; зависимости самой RS2 должны быть установлены.
-Поддерживаемые загрузчики: NeoForge 21.1.256 или новее и Fabric Loader 0.17.2 или новее.
-Forge не поддерживается: официальная RS2 для Minecraft 1.21.1 не выпускается для него.
-
-Запуск среды разработки:
-
-```powershell
-.\gradlew.bat :neoforge:runClient
-.\gradlew.bat :fabric:runClient
-```
-
-## Architectury и структура для расширения
-
-- `common`: общее ядро, регистрация контента, события, сетевые сообщения,
-  клиентская интеграция, локализация и ресурсы.
-- `common/.../feature/disk`: первая возможность — бесконечные диски.
-- `common/.../mixin`: интеграция с внутренними обёртками RS2 2.0.9.
-- `neoforge` и `fabric`: короткие точки входа загрузчиков и сборка отдельных JAR.
-- `common/src/gameTest`: общий каталог интеграционных проверок обоих загрузчиков.
-
-Сборка полностью использует Architectury Plugin 3.4.164 и Architectury Loom
-1.10.455. Общее ядро компилируется один раз; конфигурации
-`transformProductionFabric` и `transformProductionNeoForge` подготавливают
-его для соответствующего загрузчика. Shadow объединяет преобразованное ядро
-с точкой входа, затем Loom выполняет финальное преобразование имён Minecraft.
-JAR с суффиксом `dev-shadow` предназначены для разработки; устанавливать
-нужно JAR без этого суффикса.
-
-Architectury API предоставляет DeferredRegister и CreativeTabRegistry для
-контента, NetworkManager для пакетов, LifecycleEvent для инициализации типов
-хранилищ и TickEvent для синхронизации признака бесконечности. EnvExecutor
-ограничивает регистрацию клиентского обработчика клиентским окружением.
-API является внешней зависимостью и не встраивается в JAR аддона.
-
-Новые возможности размещаются в отдельных пакетах `feature/<name>`.
-Общий код не должен зависеть от API конкретного загрузчика. Регистрация нового
-контента подключается в `AdvancedContent`, а инициализация возможности —
-в `AdvancedFeatures`. Пользовательские строки добавляются в `ru_ru` и `en_us`.
-Платформенные точки входа остаются общими для всех возможностей мода.
-
-## Проверки
-
-`build` запускает модульные тесты общего ядра и GameTest на обоих загрузчиках.
-GameTest использует отдельный тестовый мод, который не входит в выпускные JAR.
-Для отдельных проверок:
-
-```powershell
-.\gradlew.bat :common:test
-.\gradlew.bat :fabric:runGameTest
-.\gradlew.bat :neoforge:runGameTest
-```
-
-Тестовые миры создаются в `fabric/build/run/gameTest` и
-`neoforge/build/run/gameTest`. XML-отчёты интеграционных тестов находятся
-в `<loader>/build/reports/gameTest/results.xml`.
-
-## Особенности интеграции
-
-Внутреннее числовое представление — миллиард единиц на диск. Это постоянное
-значение доступности для API, а не запас, расходуемый при извлечении. Поэтому
-планирование очень больших заданий ограничено числовым представлением RS2,
-хотя прямое извлечение из источника допускает любое положительное `long`.
-
-Признак бесконечности передаётся отдельно от количества, только для текущего
-меню и доступной сети. Сервер проверяет его для открытых Grid каждый тик и
-отправляет пакет только при изменении. Генерации ресурсов по тикам нет.
-При удалении последнего источника Grid показывает конечный остаток обычных дисков.
-
-Диски не имеют UUID или накопленного состояния. Зарегистрированные типы
-хранилищ сериализуют только вид источника. Mixin-вставки сохраняют нулевое
-изменение бесконечного запаса через StateTrackedStorage и обёртку привода.
-Смешанные обычные диски продолжают уменьшать свой запас и кеш сети.
-
-Версию зависимости RS2 нельзя расширять без проверки обёрток и интерфейса Grid.
-Состояние проверки описано в `VALIDATION.md`.
+Licensed under the [MIT License](LICENSE).
