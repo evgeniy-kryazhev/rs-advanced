@@ -35,7 +35,7 @@ public final class DatapackReloadTest {
                         CellDefinitions.serverDefinition(ResourceLocation.parse("my_pack:lava")).orElseThrow().resource());
                 var recipe = (ShapelessRecipe) server.getRecipeManager()
                         .byKey(ResourceLocation.parse("my_pack:infinite_lava_cell")).orElseThrow().value();
-                assertTrue(recipe.getIngredients().get(1).test(new net.minecraft.world.item.ItemStack(Items.WATER_BUCKET)));
+                assertTrue(recipe.getIngredients().get(2).test(new net.minecraft.world.item.ItemStack(Items.WATER_BUCKET)));
                 server.reloadResources(server.getPackRepository().getSelectedIds()).whenComplete((restored, restoreFailure) ->
                         server.execute(() -> {
                             if (restoreFailure != null) {

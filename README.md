@@ -13,6 +13,8 @@ An addon for **Refined Storage 2** that expands storage and automation. Includes
 
 Infinite cells appear in the Refined Storage creative tab. Hold Shift over a cell to view its help tooltip.
 
+Craft an Infinite Storage Part from a 64K Storage Part and a Nether Star. Combine it with a Storage Housing and the cell's resource (a bucket for fluids) to craft a cell.
+
 Install a cell in a standard **Disk Drive** connected to a powered RS network. Access its resource through the Grid or automation devices.
 
 Cells need no initial filling and never run out. They also absorb returned resources of their own type without accumulating them. Infinite sources are marked with **∞**; ordinary disks keep their normal storage behavior and priorities.

@@ -1,0 +1,25 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_storage_part": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "refinedstorage:64k_storage_part"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_storage_part"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "rsadvanced:infinite_storage_part"
+    ]
+  }
+}

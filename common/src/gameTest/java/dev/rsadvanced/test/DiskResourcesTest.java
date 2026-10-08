@@ -5,6 +5,7 @@ import com.refinedmods.refinedstorage.api.storage.Actor;
 import com.refinedmods.refinedstorage.common.storage.DiskInventory;
 import com.refinedmods.refinedstorage.common.storage.StorageRepositoryImpl;
 import dev.rsadvanced.RSAdvanced;
+import dev.rsadvanced.content.AdvancedContent;
 import dev.rsadvanced.network.InfiniteResourcesPayload;
 import io.netty.buffer.Unpooled;
 import java.util.ArrayList;
@@ -46,6 +47,15 @@ public class DiskResourcesTest {
     }
 
     public static void survivalRecipesMatchAndReturnEmptyBuckets(ServerLevel level) {
+        var partRecipe = level.getRecipeManager().byKey(RSAdvanced.id("infinite_storage_part")).orElseThrow().value();
+        var storagePart = BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse("refinedstorage:64k_storage_part"));
+        var partInput = CraftingInput.of(2, 1, List.of(new ItemStack(storagePart), new ItemStack(Items.NETHER_STAR)));
+        assertTrue(partRecipe instanceof ShapelessRecipe);
+        var shapelessPartRecipe = (ShapelessRecipe) partRecipe;
+        assertTrue(shapelessPartRecipe.matches(partInput, level));
+        var craftedPart = shapelessPartRecipe.assemble(partInput, level.registryAccess());
+        assertTrue(craftedPart.is(AdvancedContent.INFINITE_STORAGE_PART.get()));
+        assertEquals(1, craftedPart.getCount());
         for (String definitionId : List.of("rsadvanced:cobblestone", "rsadvanced:water", "rsadvanced_test:lava", "my_pack:lava")) {
             TestCell cell = TestCell.named(definitionId);
             // Read the recipe from Minecraft's loaded datapacks, including the transformed common module.
@@ -65,7 +75,14 @@ public class DiskResourcesTest {
             while (ingredients.size() < 9) {
                 ingredients.add(ItemStack.EMPTY);
             }
+            assertEquals(3, recipe.getIngredients().size());
+            assertTrue(ingredients.stream().anyMatch(stack -> stack.is(AdvancedContent.INFINITE_STORAGE_PART.get())));
             CraftingInput input = CraftingInput.of(3, 3, ingredients);
+            List<ItemStack> withoutPart = new ArrayList<>();
+            for (ItemStack ingredient : ingredients) {
+                withoutPart.add(ingredient.is(AdvancedContent.INFINITE_STORAGE_PART.get()) ? ItemStack.EMPTY : ingredient.copy());
+            }
+            assertTrue(!recipe.matches(CraftingInput.of(3, 3, withoutPart), level));
             assertTrue(recipe.matches(input, level));
             ItemStack result = recipe.assemble(input, level.registryAccess());
             assertTrue(ItemStack.isSameItemSameComponents(cell.stack(), result));

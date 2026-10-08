@@ -6,6 +6,9 @@
       "item": "refinedstorage:storage_housing"
     },
     {
+      "item": "rsadvanced:infinite_storage_part"
+    },
+    {
       "item": "minecraft:lava_bucket"
     }
   ],

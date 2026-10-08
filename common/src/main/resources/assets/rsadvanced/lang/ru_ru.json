@@ -1,6 +1,7 @@
 {
   "item.rsadvanced.infinite_cell": "Бесконечная ячейка (%s)",
   "item.rsadvanced.infinite_cell.help": "Устанавливается в дисковый привод Refined Storage. Предоставляет бесконечный запас указанного ресурса и принимает его обратно без накопления.",
+  "item.rsadvanced.infinite_storage_part": "Часть для бесконечного хранения",
   "item.rsadvanced.unknown_infinite_cell": "Неизвестная бесконечная ячейка",
   "tooltip.rsadvanced.drive_infinite_source": "Бесконечные ресурсы (%s)",
   "tooltip.rsadvanced.unknown_definition": "Отсутствует или несовместимо определение ячейки: %s"

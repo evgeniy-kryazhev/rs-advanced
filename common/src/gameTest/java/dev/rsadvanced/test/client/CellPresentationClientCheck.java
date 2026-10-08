@@ -134,6 +134,9 @@ public final class CellPresentationClientCheck {
         checkCreativeVariants(tab, List.of());
         tab.buildContents(parameters);
         checkCreativeVariants(tab, expectedIds);
+        var partModel = minecraft.getModelManager().getModel(ModelResourceLocation.inventory(
+                BuiltInRegistries.ITEM.getKey(AdvancedContent.INFINITE_STORAGE_PART.get())));
+        assertTrue(partModel != minecraft.getModelManager().getMissingModel());
         for (DiskResourceKind kind : DiskResourceKind.values()) {
             var item = AdvancedContent.disk(kind).get();
             assertEquals(kind.diskModel(), RefinedStorageClientApi.INSTANCE.getDiskModelsByItem().get(item));
@@ -144,6 +147,7 @@ public final class CellPresentationClientCheck {
 
     private static void checkCreativeVariants(CreativeModeTab tab, List<ResourceLocation> expectedIds) {
         for (var stacks : List.of(tab.getDisplayItems(), tab.getSearchTabDisplayItems())) {
+            assertEquals(1, stacks.stream().filter(stack -> stack.is(AdvancedContent.INFINITE_STORAGE_PART.get())).count());
             var cells = stacks.stream().filter(stack -> stack.getItem() instanceof InfiniteDiskItem).toList();
             var actualIds = cells.stream().map(stack -> stack.get(AdvancedComponents.CELL_DEFINITION.get())).toList();
             assertEquals(expectedIds, actualIds);
@@ -193,6 +197,8 @@ public final class CellPresentationClientCheck {
 
     private static void checkNames(Minecraft minecraft, String language, String stone, String water, String housing) {
         Language.inject(ClientLanguage.loadFrom(minecraft.getResourceManager(), List.of("en_us", language), false));
+        String partName = language.equals("ru_ru") ? "Часть для бесконечного хранения" : "Infinite Storage Part";
+        assertEquals(partName, new ItemStack(AdvancedContent.INFINITE_STORAGE_PART.get()).getHoverName().getString());
         String prefix = language.equals("ru_ru") ? "Бесконечная ячейка" : "Infinite Cell";
         ItemStack stoneCell = AdvancedContent.cell(RSAdvanced.id("cobblestone"), DiskResourceKind.ITEM);
         ItemStack waterCell = AdvancedContent.cell(RSAdvanced.id("water"), DiskResourceKind.FLUID);

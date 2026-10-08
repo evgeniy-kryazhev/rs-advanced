@@ -16,6 +16,8 @@ import net.minecraft.world.item.ItemStack;
 
 public final class AdvancedContent {
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(RSAdvanced.MOD_ID, Registries.ITEM);
+    public static final RegistrySupplier<Item> INFINITE_STORAGE_PART =
+            ITEMS.register("infinite_storage_part", () -> new Item(new Item.Properties()));
     public static final RegistrySupplier<InfiniteDiskItem> ITEM_DISK =
             ITEMS.register("infinite_item_disk", () -> new InfiniteDiskItem(DiskResourceKind.ITEM));
     public static final RegistrySupplier<InfiniteDiskItem> FLUID_DISK =

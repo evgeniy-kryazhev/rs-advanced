@@ -23,6 +23,7 @@ public final class RSAdvancedNeoForge {
         if (!event.getTabKey().location().equals(RefinedStorageApi.INSTANCE.getCreativeModeTabId())) {
             return;
         }
+        event.accept(AdvancedContent.INFINITE_STORAGE_PART.get());
         for (var cell : AdvancedContent.creativeCells(event.getParameters().holders())) {
             event.accept(cell, CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
         }

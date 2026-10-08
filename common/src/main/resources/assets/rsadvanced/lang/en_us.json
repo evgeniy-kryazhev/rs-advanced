@@ -1,6 +1,7 @@
 {
   "item.rsadvanced.infinite_cell": "Infinite Cell (%s)",
   "item.rsadvanced.infinite_cell.help": "Insert into a Refined Storage Disk Drive to provide an infinite supply of the specified resource. Accepts the same resource back without accumulating it.",
+  "item.rsadvanced.infinite_storage_part": "Infinite Storage Part",
   "item.rsadvanced.unknown_infinite_cell": "Unknown Infinite Cell",
   "tooltip.rsadvanced.drive_infinite_source": "Infinite Resources (%s)",
   "tooltip.rsadvanced.unknown_definition": "Missing or incompatible cell definition: %s"
