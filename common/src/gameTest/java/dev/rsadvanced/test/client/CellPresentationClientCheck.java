@@ -1,13 +1,18 @@
 package dev.rsadvanced.test.client;
 
+import com.mojang.serialization.Lifecycle;
 import com.refinedmods.refinedstorage.api.resource.ResourceAmount;
+import com.refinedmods.refinedstorage.common.api.RefinedStorageApi;
 import com.refinedmods.refinedstorage.common.api.RefinedStorageClientApi;
+import com.refinedmods.refinedstorage.common.api.support.HelpTooltipComponent;
 import com.refinedmods.refinedstorage.common.grid.GridContainerMenu;
 import com.refinedmods.refinedstorage.common.grid.GridData;
 import com.refinedmods.refinedstorage.common.grid.view.FluidGridResource;
 import com.refinedmods.refinedstorage.common.grid.view.ItemGridResource;
 import com.refinedmods.refinedstorage.common.support.resource.FluidResource;
 import com.refinedmods.refinedstorage.common.support.resource.ItemResource;
+import com.refinedmods.refinedstorage.common.support.tooltip.HelpClientTooltipComponent;
+import com.refinedmods.refinedstorage.common.support.tooltip.SmallTextClientTooltipComponent;
 import dev.architectury.event.events.client.ClientTickEvent;
 import dev.rsadvanced.RSAdvanced;
 import dev.rsadvanced.client.InfiniteGridDisplay;
@@ -16,6 +21,7 @@ import dev.rsadvanced.content.AdvancedContent;
 import dev.rsadvanced.feature.disk.CellDefinitions;
 import dev.rsadvanced.feature.disk.DiskDriveSources;
 import dev.rsadvanced.feature.disk.DiskResourceKind;
+import dev.rsadvanced.feature.disk.InfiniteDiskItem;
 import dev.rsadvanced.network.InfiniteGridMenu;
 import dev.rsadvanced.network.InfiniteResourcesPayload;
 import io.netty.buffer.Unpooled;
@@ -29,6 +35,9 @@ import java.util.stream.Collectors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.ClientLanguage;
 import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.core.MappedRegistry;
+import net.minecraft.core.RegistrationInfo;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.locale.Language;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -102,17 +111,47 @@ public final class CellPresentationClientCheck {
         var entries = CellDefinitions.entries(minecraft.getConnection().registryAccess());
         assertTrue(entries.size() > 31);
         assertTrue(CellDefinitions.displayDefinition(ResourceLocation.parse("my_pack:lava")).isPresent());
-        var tab = BuiltInRegistries.CREATIVE_MODE_TAB.get(RSAdvanced.id("main"));
-        tab.buildContents(new CreativeModeTab.ItemDisplayParameters(minecraft.level.enabledFeatures(), false,
-                minecraft.getConnection().registryAccess()));
-        assertEquals(entries.stream().map(java.util.Map.Entry::getKey).toList(), tab.getDisplayItems().stream()
-                .map(stack -> stack.get(AdvancedComponents.CELL_DEFINITION.get())).toList());
+        assertTrue(!BuiltInRegistries.CREATIVE_MODE_TAB.containsKey(RSAdvanced.id("main")));
+        var tab = BuiltInRegistries.CREATIVE_MODE_TAB.get(RefinedStorageApi.INSTANCE.getCreativeModeTabId());
+        var parameters = new CreativeModeTab.ItemDisplayParameters(minecraft.level.enabledFeatures(), false,
+                minecraft.getConnection().registryAccess());
+        var expectedIds = entries.stream().map(java.util.Map.Entry::getKey).toList();
+        tab.buildContents(parameters);
+        checkCreativeVariants(tab, expectedIds);
+        tab.buildContents(parameters);
+        checkCreativeVariants(tab, expectedIds);
+
+        // Rebuild the actual loader event with a different catalog to detect cached variants.
+        var alternateRegistry = new MappedRegistry<dev.rsadvanced.feature.disk.CellDefinition>(
+                CellDefinitions.REGISTRY_KEY, Lifecycle.stable());
+        var lavaId = ResourceLocation.parse("my_pack:lava");
+        alternateRegistry.register(net.minecraft.resources.ResourceKey.create(CellDefinitions.REGISTRY_KEY, lavaId),
+                CellDefinitions.displayDefinition(lavaId).orElseThrow(), RegistrationInfo.BUILT_IN);
+        var alternateAccess = new RegistryAccess.ImmutableRegistryAccess(List.of(alternateRegistry)).freeze();
+        tab.buildContents(new CreativeModeTab.ItemDisplayParameters(minecraft.level.enabledFeatures(), false, alternateAccess));
+        checkCreativeVariants(tab, List.of(lavaId));
+        tab.buildContents(new CreativeModeTab.ItemDisplayParameters(minecraft.level.enabledFeatures(), false, RegistryAccess.EMPTY));
+        checkCreativeVariants(tab, List.of());
+        tab.buildContents(parameters);
+        checkCreativeVariants(tab, expectedIds);
         for (DiskResourceKind kind : DiskResourceKind.values()) {
             var item = AdvancedContent.disk(kind).get();
             assertEquals(kind.diskModel(), RefinedStorageClientApi.INSTANCE.getDiskModelsByItem().get(item));
             var model = minecraft.getModelManager().getModel(ModelResourceLocation.inventory(BuiltInRegistries.ITEM.getKey(item)));
             assertTrue(model != minecraft.getModelManager().getMissingModel());
         }
+    }
+
+    private static void checkCreativeVariants(CreativeModeTab tab, List<ResourceLocation> expectedIds) {
+        for (var stacks : List.of(tab.getDisplayItems(), tab.getSearchTabDisplayItems())) {
+            var cells = stacks.stream().filter(stack -> stack.getItem() instanceof InfiniteDiskItem).toList();
+            var actualIds = cells.stream().map(stack -> stack.get(AdvancedComponents.CELL_DEFINITION.get())).toList();
+            assertEquals(expectedIds, actualIds);
+            assertEquals(expectedIds.size(), actualIds.stream().distinct().count());
+        }
+        var displayItems = new ArrayList<>(tab.getDisplayItems());
+        var tail = displayItems.subList(displayItems.size() - expectedIds.size(), displayItems.size());
+        assertEquals(expectedIds, tail.stream().map(stack -> stack.get(AdvancedComponents.CELL_DEFINITION.get())).toList());
     }
 
     private static void checkGridInfinity(Minecraft minecraft) {
@@ -167,7 +206,36 @@ public final class CellPresentationClientCheck {
         String drivePrefix = language.equals("ru_ru") ? "Бесконечные ресурсы" : "Infinite Resources";
         assertEquals(1, tooltip.size());
         assertEquals(drivePrefix + " (" + stone + ", " + water + ")", tooltip.getFirst().getString());
+        checkHelpTooltip(minecraft, stoneCell, language);
+        checkHelpTooltip(minecraft, waterCell, language);
         LOGGER.info("Checked {}: {}", language, tooltip.getFirst().getString());
+    }
+
+    private static void checkHelpTooltip(Minecraft minecraft, ItemStack cell, String language) {
+        var help = (HelpTooltipComponent) cell.getItem().getTooltipImage(cell).orElseThrow();
+        String expectedHelp = language.equals("ru_ru")
+                ? "Устанавливается в дисковый привод Refined Storage. Предоставляет бесконечный запас указанного ресурса и принимает его обратно без накопления."
+                : "Insert into a Refined Storage Disk Drive to provide an infinite supply of the specified resource. Accepts the same resource back without accumulating it.";
+        assertEquals(expectedHelp, help.text().getString());
+        List<Component> ordinaryTooltip = new ArrayList<>();
+        cell.getItem().appendHoverText(cell, net.minecraft.world.item.Item.TooltipContext.EMPTY,
+                ordinaryTooltip, net.minecraft.world.item.TooltipFlag.NORMAL);
+        assertTrue(ordinaryTooltip.isEmpty());
+        var collapsed = net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent.create(help);
+        assertTrue(collapsed instanceof SmallTextClientTooltipComponent);
+
+        boolean originalUnicode = minecraft.options.forceUnicodeFont().get();
+        try {
+            for (boolean unicode : List.of(false, true)) {
+                minecraft.options.forceUnicodeFont().set(unicode);
+                // Exercise RS's expanded layout directly; physical Shift input remains a manual scenario.
+                var expanded = HelpClientTooltipComponent.createAlwaysDisplayed(help.text());
+                assertTrue(expanded.getHeight() > 20);
+                assertTrue(expanded.getWidth(minecraft.font) > 0);
+            }
+        } finally {
+            minecraft.options.forceUnicodeFont().set(originalUnicode);
+        }
     }
 
     private static void finish(Minecraft minecraft, Throwable failure) {

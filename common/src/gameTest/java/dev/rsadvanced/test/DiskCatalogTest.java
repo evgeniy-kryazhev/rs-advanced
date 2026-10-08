@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import com.refinedmods.refinedstorage.common.Platform;
+import com.refinedmods.refinedstorage.common.api.support.HelpTooltipComponent;
 import com.refinedmods.refinedstorage.common.storage.StorageRepositoryImpl;
 import dev.rsadvanced.content.AdvancedComponents;
 import dev.rsadvanced.content.AdvancedContent;
@@ -16,11 +17,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 
 import static dev.rsadvanced.test.TestAssertions.assertEquals;
 import static dev.rsadvanced.test.TestAssertions.assertTrue;
@@ -57,6 +63,21 @@ public final class DiskCatalogTest {
         assertEquals("Бесконечная ячейка (%s)", russian.get("item.rsadvanced.infinite_cell").getAsString());
         assertEquals("Infinite Resources (%s)", english.get("tooltip.rsadvanced.drive_infinite_source").getAsString());
         assertEquals("Бесконечные ресурсы (%s)", russian.get("tooltip.rsadvanced.drive_infinite_source").getAsString());
+        assertTrue(!english.has("itemGroup.rsadvanced"));
+        assertTrue(!russian.has("tooltip.rsadvanced.infinite_source"));
+        assertTrue(english.has("item.rsadvanced.infinite_cell.help"));
+        assertTrue(russian.has("item.rsadvanced.infinite_cell.help"));
+        assertTrue(AdvancedContent.creativeCells(RegistryAccess.EMPTY).isEmpty());
+        assertEquals(ids, AdvancedContent.creativeCells(helper.getLevel().registryAccess()).stream()
+                .map(stack -> stack.get(AdvancedComponents.CELL_DEFINITION.get())).toList());
+        for (TestCell cell : TestCell.values()) {
+            var stack = cell.stack();
+            var item = (InfiniteDiskItem) stack.getItem();
+            assertTrue(item.getTooltipImage(stack).orElseThrow() instanceof HelpTooltipComponent);
+            List<Component> tooltip = new ArrayList<>();
+            item.appendHoverText(stack, Item.TooltipContext.EMPTY, tooltip, TooltipFlag.NORMAL);
+            assertTrue(tooltip.isEmpty());
+        }
         for (DiskResourceKind kind : DiskResourceKind.values()) {
             assertEquals(kind, AdvancedContent.disk(kind).get().kind());
             String id = "infinite_" + kind.getSerializedName() + "_disk";
@@ -106,6 +127,14 @@ public final class DiskCatalogTest {
         ItemStack wrongKind = AdvancedContent.cell(ResourceLocation.parse("rsadvanced:water"), DiskResourceKind.ITEM);
         assertTrue(((InfiniteDiskItem) wrongKind.getItem()).resolve(repository, wrongKind).isEmpty());
         assertTrue(item.resolve(repository, new ItemStack(item)).isEmpty());
+        for (ItemStack invalid : List.of(restored, wrongKind, new ItemStack(item))) {
+            var invalidItem = (InfiniteDiskItem) invalid.getItem();
+            assertTrue(invalidItem.getTooltipImage(invalid).isEmpty());
+            List<Component> tooltip = new ArrayList<>();
+            invalidItem.appendHoverText(invalid, Item.TooltipContext.EMPTY, tooltip, TooltipFlag.NORMAL);
+            assertEquals(1, tooltip.size());
+            assertEquals(ChatFormatting.RED.getColor().intValue(), tooltip.getFirst().getStyle().getColor().getValue());
+        }
     }
 
     public static void worldCatalogDoesNotLeakBetweenSessions(GameTestHelper helper) {

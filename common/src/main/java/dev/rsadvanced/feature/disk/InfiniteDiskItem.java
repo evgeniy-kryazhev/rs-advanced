@@ -4,11 +4,13 @@ import com.refinedmods.refinedstorage.common.api.storage.SerializableStorage;
 import com.refinedmods.refinedstorage.common.api.storage.StorageContainerItem;
 import com.refinedmods.refinedstorage.common.api.storage.StorageInfo;
 import com.refinedmods.refinedstorage.common.api.storage.StorageRepository;
+import com.refinedmods.refinedstorage.common.api.support.HelpTooltipComponent;
 import dev.rsadvanced.content.AdvancedComponents;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -52,16 +54,20 @@ public final class InfiniteDiskItem extends Item implements StorageContainerItem
     }
 
     @Override
+    public Optional<TooltipComponent> getTooltipImage(ItemStack stack) {
+        if (displayDefinition(stack).isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(new HelpTooltipComponent(Component.translatable("item.rsadvanced.infinite_cell.help")));
+    }
+
+    @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, context, tooltip, flag);
         if (displayDefinition(stack).isEmpty()) {
             var definitionId = stack.get(AdvancedComponents.CELL_DEFINITION.get());
             tooltip.add(Component.translatable("tooltip.rsadvanced.unknown_definition",
                     definitionId == null ? "—" : definitionId.toString()).withStyle(ChatFormatting.RED));
-            return;
         }
-        tooltip.add(Component.translatable("tooltip.rsadvanced.infinite_source").withStyle(ChatFormatting.AQUA));
-        tooltip.add(Component.translatable("tooltip.rsadvanced.disk_drive").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.translatable("tooltip.rsadvanced.absorbs_returns").withStyle(ChatFormatting.GRAY));
     }
 }

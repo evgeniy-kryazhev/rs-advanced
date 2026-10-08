@@ -8,12 +8,14 @@ An addon for **Refined Storage 2** that expands storage and automation. Includes
 
 ## Features
 
-- **Infinite Cobblestone Cell** вЂ” an endless source of cobblestone.
-- **Infinite Water Cell** вЂ” an endless source of water.
+- **Infinite Cobblestone Cell** — an endless source of cobblestone.
+- **Infinite Water Cell** — an endless source of water.
+
+Infinite cells appear in the Refined Storage creative tab. Hold Shift over a cell to view its help tooltip.
 
 Install a cell in a standard **Disk Drive** connected to a powered RS network. Access its resource through the Grid or automation devices.
 
-Cells need no initial filling and never run out. They also absorb returned resources of their own type without accumulating them. Infinite sources are marked with **в€ћ**; ordinary disks keep their normal storage behavior and priorities.
+Cells need no initial filling and never run out. They also absorb returned resources of their own type without accumulating them. Infinite sources are marked with **∞**; ordinary disks keep their normal storage behavior and priorities.
 
 ## Custom cells
 
