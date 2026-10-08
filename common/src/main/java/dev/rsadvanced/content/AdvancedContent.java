@@ -6,6 +6,8 @@ import dev.architectury.registry.registries.RegistrySupplier;
 import dev.rsadvanced.RSAdvanced;
 import dev.rsadvanced.feature.disk.InfiniteDiskItem;
 import dev.rsadvanced.feature.disk.InfiniteDiskType;
+import java.util.EnumMap;
+import java.util.Map;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
@@ -17,10 +19,21 @@ public final class AdvancedContent {
     private static final DeferredRegister<CreativeModeTab> TABS =
             DeferredRegister.create(RSAdvanced.MOD_ID, Registries.CREATIVE_MODE_TAB);
 
-    public static final RegistrySupplier<InfiniteDiskItem> COBBLESTONE_DISK = ITEMS.register(
-            InfiniteDiskType.COBBLESTONE.itemName(), () -> new InfiniteDiskItem(InfiniteDiskType.COBBLESTONE));
-    public static final RegistrySupplier<InfiniteDiskItem> WATER_DISK = ITEMS.register(
-            InfiniteDiskType.WATER.itemName(), () -> new InfiniteDiskItem(InfiniteDiskType.WATER));
+    private static final Map<InfiniteDiskType, RegistrySupplier<InfiniteDiskItem>> DISKS = registerDisks();
+    public static final RegistrySupplier<InfiniteDiskItem> COBBLESTONE_DISK = disk(InfiniteDiskType.COBBLESTONE);
+    public static final RegistrySupplier<InfiniteDiskItem> WATER_DISK = disk(InfiniteDiskType.WATER);
+
+    private static Map<InfiniteDiskType, RegistrySupplier<InfiniteDiskItem>> registerDisks() {
+        Map<InfiniteDiskType, RegistrySupplier<InfiniteDiskItem>> disks = new EnumMap<>(InfiniteDiskType.class);
+        for (InfiniteDiskType type : InfiniteDiskType.values()) {
+            disks.put(type, ITEMS.register(type.itemName(), () -> new InfiniteDiskItem(type)));
+        }
+        return Map.copyOf(disks);
+    }
+
+    public static RegistrySupplier<InfiniteDiskItem> disk(InfiniteDiskType type) {
+        return DISKS.get(type);
+    }
 
     private AdvancedContent() {
     }
@@ -30,8 +43,9 @@ public final class AdvancedContent {
             builder.title(Component.translatable("itemGroup.rsadvanced"));
             builder.icon(() -> COBBLESTONE_DISK.get().getDefaultInstance());
             builder.displayItems((parameters, output) -> {
-                output.accept(COBBLESTONE_DISK.get());
-                output.accept(WATER_DISK.get());
+                for (InfiniteDiskType type : InfiniteDiskType.values()) {
+                    output.accept(disk(type).get());
+                }
             });
         }));
         ITEMS.register();

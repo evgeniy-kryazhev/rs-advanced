@@ -148,8 +148,9 @@ public class StorageIntegrationTest {
     public static void insertionPreservesFiniteStockPrioritiesAndVoidExcess() {
         for (InfiniteDiskType diskType : InfiniteDiskType.values()) {
             ResourceKey resource = diskType.resource();
-            ResourceKey foreignResource = diskType == InfiniteDiskType.WATER
-                    ? InfiniteDiskType.COBBLESTONE.resource() : InfiniteDiskType.WATER.resource();
+            ResourceKey foreignResource = java.util.Arrays.stream(InfiniteDiskType.values())
+                    .filter(candidate -> !candidate.resource().equals(resource))
+                    .findFirst().orElseThrow().resource();
             StorageNetworkNode node = new StorageNetworkNode(1, 1, 8);
             node.setActive(true);
             CompositeStorage drive = (CompositeStorage) node.getStorage();

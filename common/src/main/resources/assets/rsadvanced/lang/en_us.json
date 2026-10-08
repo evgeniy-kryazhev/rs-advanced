@@ -1,9 +1,0 @@
-{
-  "itemGroup.rsadvanced": "RS Advanced",
-  "item.rsadvanced.infinite_cobblestone_disk": "Infinite Cobblestone Disk",
-  "item.rsadvanced.infinite_water_disk": "Infinite Water Disk",
-  "tooltip.rsadvanced.infinite_source": "∞ Inexhaustible resource source",
-  "tooltip.rsadvanced.disk_drive": "Install in a Refined Storage Disk Drive",
-  "tooltip.rsadvanced.absorbs_returns": "Absorbs its resource without accumulating it.",
-  "tooltip.rsadvanced.drive_infinite_source": "Infinite source: %s — ∞"
-}

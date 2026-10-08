@@ -46,6 +46,11 @@ loom {
 
 tasks.named('runGameTest') {
     dependsOn tasks.named('gameTestClasses')
+    if (project.name == 'neoforge') {
+        // Both launches copy the same Architectury agent. Windows locks the JAR
+        // while a server is running, so loader tests must launch sequentially.
+        mustRunAfter ':fabric:runGameTest'
+    }
     doFirst {
         project.layout.buildDirectory.dir('reports/gameTest').get().asFile.mkdirs()
     }

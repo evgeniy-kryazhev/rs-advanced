@@ -16,6 +16,7 @@ public final class IntegrationGameTests {
                 create("insertion_priorities", StorageIntegrationTest::insertionPreservesFiniteStockPrioritiesAndVoidExcess),
                 create("grid_returns", GridInsertionTest::gridReturnsCobblestoneAndEmptiesWaterBucket),
                 create("exporter_limits", ExporterTransferTest::exporterRespectsQuotaAndDestinationCapacity),
+                create("disk_catalog", DiskCatalogTest::catalogResourcesAndQuotasAreComplete),
                 create("drive_display", DiskDriveDisplayTest::driveStatisticsExcludeInfiniteDisks),
                 create("access_and_removal", StorageIntegrationTest::multipleDisksAndAccessChangesUpdateInfinityMetadata),
                 create("storage_codec", StorageIntegrationTest::sourceCodecStoresOnlyItsTypeSpecificEmptyState),

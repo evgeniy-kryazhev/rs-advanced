@@ -8,6 +8,7 @@ import com.refinedmods.refinedstorage.api.storage.Actor;
 import com.refinedmods.refinedstorage.common.storage.DiskInventory;
 import com.refinedmods.refinedstorage.common.storage.StorageRepositoryImpl;
 import io.netty.buffer.Unpooled;
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -46,22 +47,31 @@ public class DiskResourcesTest {
     }
 
     public static void survivalRecipesMatchAndReturnEmptyBuckets(ServerLevel level) {
-        ItemStack housing = new ItemStack(BuiltInRegistries.ITEM.get(
-                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("refinedstorage", "storage_housing")));
         for (InfiniteDiskType diskType : InfiniteDiskType.values()) {
             // Read the recipe from Minecraft's loaded datapacks, including the transformed common module.
             var holder = level.getRecipeManager().byKey(RSAdvanced.id(diskType.itemName())).orElseThrow();
             ShapelessRecipe recipe = (ShapelessRecipe) holder.value();
-            List<ItemStack> ingredients = diskType == InfiniteDiskType.WATER
-                    ? List.of(housing, new ItemStack(Items.WATER_BUCKET), new ItemStack(Items.WATER_BUCKET), ItemStack.EMPTY)
-                    : List.of(housing, new ItemStack(Items.WATER_BUCKET), new ItemStack(Items.LAVA_BUCKET),
-                            new ItemStack(Items.COBBLESTONE));
-            CraftingInput input = CraftingInput.of(2, 2, ingredients);
+            List<ItemStack> ingredients = new ArrayList<>();
+            long expectedBuckets = 0;
+            for (String ingredientId : diskType.recipeIngredients()) {
+                ItemStack ingredient = new ItemStack(BuiltInRegistries.ITEM.get(
+                        net.minecraft.resources.ResourceLocation.parse(ingredientId)));
+                assertTrue(!ingredient.isEmpty());
+                ingredients.add(ingredient);
+                if (ingredient.getItem().hasCraftingRemainingItem()
+                        && ingredient.getItem().getCraftingRemainingItem() == Items.BUCKET) {
+                    expectedBuckets++;
+                }
+            }
+            while (ingredients.size() < 9) {
+                ingredients.add(ItemStack.EMPTY);
+            }
+            CraftingInput input = CraftingInput.of(3, 3, ingredients);
             assertTrue(recipe.matches(input, level));
             ItemStack result = recipe.assemble(input, level.registryAccess());
             assertEquals(RSAdvanced.id(diskType.itemName()), BuiltInRegistries.ITEM.getKey(result.getItem()));
             assertEquals(1, result.getCount());
-            assertEquals(2, recipe.getRemainingItems(input).stream().filter(stack -> stack.is(Items.BUCKET)).count());
+            assertEquals(expectedBuckets, recipe.getRemainingItems(input).stream().filter(stack -> stack.is(Items.BUCKET)).count());
         }
     }
 

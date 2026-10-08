@@ -46,3 +46,41 @@ sourcesJar {
 }
 
 apply from: rootProject.file('gradle/game-tests.gradle')
+
+// Build-time tooling is a separate mod and never enters either release JAR.
+sourceSets {
+    datagen {
+        java.srcDir rootProject.file('common/src/datagen/java')
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+
+def diskDataOutput = rootProject.file('common/src/generated/resources').absolutePath
+
+loom {
+    mods {
+        rsadvanced_datagen {
+            sourceSet sourceSets.datagen
+        }
+    }
+    runs {
+        datagen {
+            inherit server
+            source sourceSets.datagen
+            runDir 'build/run/datagen'
+            property 'fabric-api.datagen'
+            property 'fabric-api.datagen.output-dir', diskDataOutput
+            property 'fabric-api.datagen.modid', 'rsadvanced_datagen'
+        }
+    }
+}
+
+tasks.named('runDatagen') {
+    dependsOn tasks.named('datagenClasses')
+    doFirst {
+        // Datagen has no platform transforms. Architectury's live transformer leaves
+        // non-daemon workers running after Fabric's generator returns on Windows.
+        mainClass.set('net.fabricmc.devlaunchinjector.Main')
+    }
+}

@@ -1,0 +1,9 @@
+{
+  "item.rsadvanced.infinite_cobblestone_disk": "Бесконечный диск булыжника",
+  "item.rsadvanced.infinite_water_disk": "Бесконечный диск воды",
+  "itemGroup.rsadvanced": "RS Advanced",
+  "tooltip.rsadvanced.absorbs_returns": "Принимает свой ресурс без накопления.",
+  "tooltip.rsadvanced.disk_drive": "Устанавливается в Disk Drive Refined Storage",
+  "tooltip.rsadvanced.drive_infinite_source": "Бесконечный источник: %s — ∞",
+  "tooltip.rsadvanced.infinite_source": "∞ Неисчерпаемый источник ресурса"
+}

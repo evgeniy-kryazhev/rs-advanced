@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "rsadvanced_datagen",
+  "version": "1.0.0",
+  "name": "RS Advanced Data Generator",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": ["dev.rsadvanced.fabric.data.RSAdvancedDataGenerator"]
+  },
+  "depends": {
+    "rsadvanced": "*",
+    "fabric-api": "*"
+  }
+}

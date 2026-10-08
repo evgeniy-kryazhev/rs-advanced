@@ -11,6 +11,7 @@ import com.refinedmods.refinedstorage.common.api.RefinedStorageApi;
 import com.refinedmods.refinedstorage.common.api.grid.Grid;
 import com.refinedmods.refinedstorage.common.api.support.resource.ResourceType;
 import dev.rsadvanced.feature.disk.InfiniteDiskType;
+import dev.rsadvanced.feature.disk.DiskResourceKind;
 import dev.rsadvanced.feature.disk.InfiniteResourceStorage;
 import java.lang.reflect.Proxy;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -36,8 +37,8 @@ public final class GridInsertionTest {
             network.addSource(node.getStorage());
             Grid grid = insertionOnlyGrid(network);
             var strategy = RefinedStorageApi.INSTANCE.createGridInsertionStrategy(menu, player, grid);
-            ItemStack returnedStack = diskType == InfiniteDiskType.WATER
-                    ? new ItemStack(Items.WATER_BUCKET) : new ItemStack(Items.COBBLESTONE, 64);
+            boolean fluidResource = diskType.description().kind() == DiskResourceKind.FLUID;
+            ItemStack returnedStack = new ItemStack(diskType.description().returnItem().get(), fluidResource ? 1 : 64);
 
             node.getStorageConfiguration().setAccessMode(AccessMode.EXTRACT);
             menu.setCarried(returnedStack.copy());
@@ -46,7 +47,7 @@ public final class GridInsertionTest {
 
             node.getStorageConfiguration().setAccessMode(AccessMode.INSERT_EXTRACT);
             assertTrue(strategy.onInsert(GridInsertMode.ENTIRE_RESOURCE, true));
-            if (diskType == InfiniteDiskType.WATER) {
+            if (fluidResource) {
                 assertTrue(menu.getCarried().is(Items.BUCKET));
                 assertEquals(1, menu.getCarried().getCount());
             } else {

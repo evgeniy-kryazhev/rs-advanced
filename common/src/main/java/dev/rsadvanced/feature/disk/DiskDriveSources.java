@@ -33,8 +33,7 @@ public record DiskDriveSources(Set<InfiniteDiskType> infiniteTypes, boolean hasO
         // Enum order keeps the tooltip stable when disks move between slots.
         for (InfiniteDiskType type : InfiniteDiskType.values()) {
             if (infiniteTypes.contains(type)) {
-                String resourceKey = type == InfiniteDiskType.WATER
-                        ? "block.minecraft.water" : "block.minecraft.cobblestone";
+                String resourceKey = type.description().translationKey();
                 tooltip.add(Component.translatable("tooltip.rsadvanced.drive_infinite_source",
                         Component.translatable(resourceKey)).withStyle(ChatFormatting.AQUA));
             }

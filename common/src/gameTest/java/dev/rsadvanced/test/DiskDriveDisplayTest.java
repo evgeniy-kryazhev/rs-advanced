@@ -8,6 +8,7 @@ import com.refinedmods.refinedstorage.common.support.resource.ResourceContainerD
 import dev.rsadvanced.RSAdvanced;
 import dev.rsadvanced.feature.disk.InfiniteDiskDriveMenu;
 import dev.rsadvanced.feature.disk.InfiniteDiskType;
+import dev.rsadvanced.feature.disk.InfiniteDiskItem;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -44,7 +45,7 @@ public final class DiskDriveDisplayTest {
                         throw new UnsupportedOperationException("Unexpected info operation: " + method.getName());
                     }
                     ItemStack stack = (ItemStack) arguments[0];
-                    if (stack.getItem() == cobblestoneDisk.getItem() || stack.getItem() == waterDisk.getItem()) {
+                    if (stack.getItem() instanceof InfiniteDiskItem) {
                         return ((StorageContainerItem) stack.getItem()).getInfo(repository, stack);
                     }
                     return Optional.of(new StorageInfo(25, 100));
@@ -60,6 +61,11 @@ public final class DiskDriveDisplayTest {
             assertEquals(0, menu.getStored());
             assertEquals(0, menu.getCapacity());
             assertEquals(Double.valueOf(0.0), Double.valueOf(menu.getProgress()));
+            List<Component> singleTooltip = new ArrayList<>();
+            sourcesMenu.rsadvanced$getSources().appendTooltip(singleTooltip);
+            assertEquals(List.of(Component.translatable("tooltip.rsadvanced.drive_infinite_source",
+                    Component.translatable(type.description().translationKey())).withStyle(net.minecraft.ChatFormatting.AQUA)),
+                    singleTooltip);
         }
         menu.getSlot(0).set(cobblestoneDisk.copy());
         menu.getSlot(1).set(cobblestoneDisk.copy());
