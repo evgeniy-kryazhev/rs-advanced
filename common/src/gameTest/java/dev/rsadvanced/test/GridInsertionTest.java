@@ -10,7 +10,6 @@ import com.refinedmods.refinedstorage.api.storage.root.RootStorageImpl;
 import com.refinedmods.refinedstorage.common.api.RefinedStorageApi;
 import com.refinedmods.refinedstorage.common.api.grid.Grid;
 import com.refinedmods.refinedstorage.common.api.support.resource.ResourceType;
-import dev.rsadvanced.feature.disk.InfiniteDiskType;
 import dev.rsadvanced.feature.disk.DiskResourceKind;
 import dev.rsadvanced.feature.disk.InfiniteResourceStorage;
 import java.lang.reflect.Proxy;
@@ -28,17 +27,17 @@ public final class GridInsertionTest {
     public static void gridReturnsCobblestoneAndEmptiesWaterBucket(GameTestHelper helper) {
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
         AbstractContainerMenu menu = player.containerMenu;
-        for (InfiniteDiskType diskType : InfiniteDiskType.values()) {
+        for (TestCell cell : TestCell.values()) {
             StorageNetworkNode node = new StorageNetworkNode(1, 1, 8);
             node.setActive(true);
             ((CompositeStorage) node.getStorage()).addSource(
-                    new StateTrackedStorage(diskType.create(null, () -> { }), null));
+                    new StateTrackedStorage(cell.create(), null));
             RootStorageImpl network = new RootStorageImpl();
             network.addSource(node.getStorage());
             Grid grid = insertionOnlyGrid(network);
             var strategy = RefinedStorageApi.INSTANCE.createGridInsertionStrategy(menu, player, grid);
-            boolean fluidResource = diskType.description().kind() == DiskResourceKind.FLUID;
-            ItemStack returnedStack = new ItemStack(diskType.description().returnItem().get(), fluidResource ? 1 : 64);
+            boolean fluidResource = cell.definition().kind() == DiskResourceKind.FLUID;
+            ItemStack returnedStack = new ItemStack(cell.returnItem(), fluidResource ? 1 : 64);
 
             node.getStorageConfiguration().setAccessMode(AccessMode.EXTRACT);
             menu.setCarried(returnedStack.copy());
@@ -53,7 +52,7 @@ public final class GridInsertionTest {
             } else {
                 assertTrue(menu.getCarried().isEmpty());
             }
-            assertEquals(InfiniteResourceStorage.ADVERTISED_AMOUNT, network.get(diskType.resource()));
+            assertEquals(InfiniteResourceStorage.ADVERTISED_AMOUNT, network.get(cell.resource()));
             menu.setCarried(ItemStack.EMPTY);
         }
     }

@@ -12,6 +12,7 @@ import com.refinedmods.refinedstorage.api.storage.composite.CompositeAwareChild.
 import com.refinedmods.refinedstorage.api.storage.composite.CompositeStorageImpl;
 import dev.rsadvanced.feature.disk.InfiniteSource;
 import dev.rsadvanced.feature.disk.InfiniteSources;
+import java.util.Set;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -28,6 +29,14 @@ public abstract class ConfiguredStorageMixin implements InfiniteSource {
     @Shadow
     @Final
     private StorageConfiguration config;
+
+    @Override
+    public Set<ResourceKey> rsadvanced$getInfiniteResources() {
+        if (!config.isActive() || config.getAccessMode().isInsertOnly()) {
+            return Set.of();
+        }
+        return InfiniteSources.collect(delegate);
+    }
 
     @Override
     public boolean rsadvanced$isInfinite(ResourceKey resource) {

@@ -1,6 +1,6 @@
 package dev.rsadvanced.feature;
 
-import dev.rsadvanced.feature.disk.InfiniteDiskType;
+import dev.rsadvanced.feature.disk.InfiniteStorageType;
 
 /** Explicit startup catalog for independent RS Advanced features. */
 public final class AdvancedFeatures {
@@ -8,6 +8,6 @@ public final class AdvancedFeatures {
     }
 
     public static void initialize() {
-        InfiniteDiskType.registerStorageTypes();
+        InfiniteStorageType.register();
     }
 }

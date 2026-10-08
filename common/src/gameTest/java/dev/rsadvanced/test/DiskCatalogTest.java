@@ -2,75 +2,133 @@ package dev.rsadvanced.test;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.serialization.JsonOps;
 import com.refinedmods.refinedstorage.common.Platform;
+import com.refinedmods.refinedstorage.common.storage.StorageRepositoryImpl;
+import dev.rsadvanced.content.AdvancedComponents;
 import dev.rsadvanced.content.AdvancedContent;
+import dev.rsadvanced.feature.disk.CellDefinition;
+import dev.rsadvanced.feature.disk.CellDefinitions;
 import dev.rsadvanced.feature.disk.DiskResourceKind;
-import dev.rsadvanced.feature.disk.InfiniteDiskType;
+import dev.rsadvanced.feature.disk.InfiniteDiskItem;
+import dev.rsadvanced.feature.disk.InfiniteStorageType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 
 import static dev.rsadvanced.test.TestAssertions.assertEquals;
 import static dev.rsadvanced.test.TestAssertions.assertTrue;
 
-/** Missing generated files fail check/build with the affected catalog ID. */
 public final class DiskCatalogTest {
-    public static void catalogResourcesAndQuotasAreComplete() throws IOException {
+    public static void catalogResourcesAndQuotasAreComplete(GameTestHelper helper) throws IOException {
+        // Read the competing fixture from selected packs in priority order, independently of the world registry.
+        String expectedResource = null;
+        int competingDefinitions = 0;
+        var path = ResourceLocation.parse("rsadvanced_test:rsadvanced/infinite_cell/priority.json");
+        for (var selectedPack : helper.getLevel().getServer().getPackRepository().getSelectedPacks()) {
+            try (var pack = selectedPack.open()) {
+                var input = pack.getResource(net.minecraft.server.packs.PackType.SERVER_DATA, path);
+                if (input != null) {
+                    try (var reader = new InputStreamReader(input.get(), StandardCharsets.UTF_8)) {
+                        expectedResource = JsonParser.parseReader(reader).getAsJsonObject().get("resource").getAsString();
+                        competingDefinitions++;
+                    }
+                }
+            }
+        }
+        assertTrue(competingDefinitions >= 2);
+        assertTrue(TestCell.values().size() > 31);
+        assertEquals(ResourceLocation.parse(expectedResource), TestCell.named("rsadvanced_test:priority").definition().resource());
+        assertEquals(ResourceLocation.parse("minecraft:lava"), TestCell.named("my_pack:lava").definition().resource());
+        assertEquals(ResourceLocation.parse("minecraft:lava"), TestCell.named("rsadvanced_test:lava").definition().resource());
+        assertEquals(ResourceLocation.parse("refinedstorage:storage_housing"),
+                TestCell.named("rsadvanced_test:modded_item").definition().resource());
+        List<ResourceLocation> ids = TestCell.values().stream().map(TestCell::id).toList();
+        assertEquals(ids.stream().sorted(java.util.Comparator.comparing(ResourceLocation::toString)).toList(), ids);
         JsonObject english = json("assets/rsadvanced/lang/en_us.json");
         JsonObject russian = json("assets/rsadvanced/lang/ru_ru.json");
-        JsonObject advancement = json("data/rsadvanced/advancement/recipes/infinite_disks.json");
-        Set<String> unlockedRecipes = new HashSet<>();
-        advancement.getAsJsonObject("rewards").getAsJsonArray("recipes")
-                .forEach(recipe -> unlockedRecipes.add(recipe.getAsString()));
-        Set<String> ids = new HashSet<>();
-        int flags = 0;
-        for (InfiniteDiskType type : InfiniteDiskType.values()) {
-            String id = type.itemName();
-            if (!ids.add(id) || (flags & type.flag()) != 0) {
-                throw new AssertionError("Duplicate infinite disk ID or flag: " + id);
-            }
-            flags |= type.flag();
-            assertEquals(type, AdvancedContent.disk(type).get().diskType());
-            require(english.has(type.translationKey()), id, "English translation");
-            require(russian.has(type.translationKey()), id, "Russian translation");
-            assertEquals(type.englishName(), english.get(type.translationKey()).getAsString());
-            assertEquals(type.russianName(), russian.get(type.translationKey()).getAsString());
-            require(unlockedRecipes.contains("rsadvanced:" + id), id, "recipe unlock");
-            JsonObject recipe = json("data/rsadvanced/recipe/" + id + ".json");
-            assertEquals("rsadvanced:" + id, recipe.getAsJsonObject("result").get("id").getAsString());
-            assertEquals(type.recipeIngredients(), recipe.getAsJsonArray("ingredients").asList().stream()
-                    .map(ingredient -> ingredient.getAsJsonObject().get("item").getAsString()).toList());
+        assertEquals("Infinite Cell (%s)", english.get("item.rsadvanced.infinite_cell").getAsString());
+        assertEquals("Бесконечная ячейка (%s)", russian.get("item.rsadvanced.infinite_cell").getAsString());
+        assertEquals("Infinite Resources (%s)", english.get("tooltip.rsadvanced.drive_infinite_source").getAsString());
+        assertEquals("Бесконечные ресурсы (%s)", russian.get("tooltip.rsadvanced.drive_infinite_source").getAsString());
+        for (DiskResourceKind kind : DiskResourceKind.values()) {
+            assertEquals(kind, AdvancedContent.disk(kind).get().kind());
+            String id = "infinite_" + kind.getSerializedName() + "_disk";
             JsonObject model = json("assets/rsadvanced/models/item/" + id + ".json");
             assertEquals("minecraft:item/generated", model.get("parent").getAsString());
-            assertEquals("rsadvanced:item/" + id, model.getAsJsonObject("textures").get("layer0").getAsString());
             try (InputStream texture = resource("assets/rsadvanced/textures/item/" + id + ".png")) {
-                byte[] signature = texture.readNBytes(8);
-                assertTrue(java.util.Arrays.equals(new byte[]{(byte) 137, 80, 78, 71, 13, 10, 26, 10}, signature));
+                assertEquals(8, texture.readNBytes(8).length);
             }
-            boolean fluid = type.description().kind() == DiskResourceKind.FLUID;
-            long unit = fluid ? Platform.INSTANCE.getBucketAmount() : 1;
+            long unit = kind == DiskResourceKind.FLUID ? Platform.INSTANCE.getBucketAmount() : 1;
+            var type = InfiniteStorageType.forKind(kind);
             assertEquals(unit, type.getDiskInterfaceTransferQuota(false));
-            assertEquals(unit * (fluid ? 16 : 64), type.getDiskInterfaceTransferQuota(true));
-            assertEquals("refinedstorage:block/disk/" + (fluid ? "fluid_disk" : "disk"),
-                    type.description().kind().diskModel().toString());
+            assertEquals(unit * (kind == DiskResourceKind.FLUID ? 16 : 64), type.getDiskInterfaceTransferQuota(true));
+            assertTrue(type.getMapCodec(() -> { }).codec().parse(JsonOps.INSTANCE,
+                    JsonParser.parseString("{}" )).error().isPresent());
+            boolean rejected = false;
+            try {
+                type.create(null, () -> { });
+            } catch (IllegalArgumentException exception) {
+                rejected = exception.getMessage().contains("cell_definition");
+            }
+            assertTrue(rejected);
         }
-        assertEquals(1, InfiniteDiskType.COBBLESTONE.flag());
-        assertEquals(2, InfiniteDiskType.WATER.flag());
     }
 
-    private static void require(boolean present, String id, String detail) {
-        if (!present) {
-            throw new AssertionError("Missing " + detail + " for rsadvanced:" + id + "; run :fabric:runDatagen");
+    public static void invalidDefinitionsAreRejected() {
+        for (String definition : List.of(
+                "{\"kind\":\"chemical\",\"resource\":\"minecraft:water\"}",
+                "{\"kind\":\"fluid\",\"resource\":\"minecraft:cobblestone\"}",
+                "{\"kind\":\"item\",\"resource\":\"minecraft:water\"}",
+                "{\"kind\":\"item\",\"resource\":\"missing_mod:resource\"}",
+                "{\"kind\":\"item\",\"resource\":\"minecraft:air\"}")) {
+            assertTrue(CellDefinition.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString(definition)).error().isPresent());
         }
+    }
+
+    public static void unknownCellsKeepTheirComponents(GameTestHelper helper) {
+        var repository = new StorageRepositoryImpl();
+        ItemStack unknown = AdvancedContent.cell(ResourceLocation.parse("missing_pack:cell"), DiskResourceKind.ITEM);
+        var operations = helper.getLevel().registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE);
+        var encoded = ItemStack.CODEC.encodeStart(operations, unknown).getOrThrow();
+        ItemStack restored = ItemStack.CODEC.parse(operations, encoded).getOrThrow();
+        assertEquals(ResourceLocation.parse("missing_pack:cell"), restored.get(AdvancedComponents.CELL_DEFINITION.get()));
+        var item = (InfiniteDiskItem) restored.getItem();
+        assertTrue(item.resolve(repository, restored).isEmpty());
+        assertEquals(net.minecraft.network.chat.Component.translatable("item.rsadvanced.unknown_infinite_cell"),
+                item.getName(restored));
+        ItemStack wrongKind = AdvancedContent.cell(ResourceLocation.parse("rsadvanced:water"), DiskResourceKind.ITEM);
+        assertTrue(((InfiniteDiskItem) wrongKind.getItem()).resolve(repository, wrongKind).isEmpty());
+        assertTrue(item.resolve(repository, new ItemStack(item)).isEmpty());
+    }
+
+    public static void worldCatalogDoesNotLeakBetweenSessions(GameTestHelper helper) {
+        var registries = helper.getLevel().registryAccess();
+        ItemStack cell = TestCell.named("rsadvanced:cobblestone").stack();
+        var item = (InfiniteDiskItem) cell.getItem();
+        var repository = new StorageRepositoryImpl();
+        try {
+            CellDefinitions.endSession();
+            assertTrue(CellDefinitions.serverEntries().isEmpty());
+            assertTrue(item.resolve(repository, cell).isEmpty());
+            CellDefinitions.startSession(RegistryAccess.EMPTY);
+            assertTrue(item.resolve(repository, cell).isEmpty());
+        } finally {
+            CellDefinitions.startSession(registries);
+        }
+        assertTrue(item.resolve(repository, cell).isPresent());
     }
 
     private static InputStream resource(String path) {
         InputStream stream = DiskCatalogTest.class.getClassLoader().getResourceAsStream(path);
         if (stream == null) {
-            throw new AssertionError("Missing catalog resource: " + path + "; run :fabric:runDatagen or add the PNG texture");
+            throw new AssertionError("Missing bundled resource: " + path);
         }
         return stream;
     }

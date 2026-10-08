@@ -3,9 +3,17 @@
   "id": "rsadvanced_test",
   "version": "1.0.0",
   "name": "RS Advanced Integration Tests",
-  "environment": "server",
+  "environment": "*",
   "entrypoints": {
-    "fabric-gametest": ["dev.rsadvanced.test.IntegrationGameTests"]
+    "fabric-gametest": [
+      "dev.rsadvanced.test.IntegrationGameTests"
+    ],
+    "client": [
+      "dev.rsadvanced.test.fabric.ClientCheckInitializer"
+    ],
+    "main": [
+      "dev.rsadvanced.test.fabric.ServerCheckInitializer"
+    ]
   },
   "depends": {
     "rsadvanced": "*",

@@ -7,7 +7,6 @@ import com.refinedmods.refinedstorage.common.storage.diskdrive.DiskDriveContaine
 import com.refinedmods.refinedstorage.common.support.resource.ResourceContainerData;
 import dev.rsadvanced.RSAdvanced;
 import dev.rsadvanced.feature.disk.InfiniteDiskDriveMenu;
-import dev.rsadvanced.feature.disk.InfiniteDiskType;
 import dev.rsadvanced.feature.disk.InfiniteDiskItem;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
@@ -30,8 +29,8 @@ public final class DiskDriveDisplayTest {
         DiskDriveContainerMenu menu = new DiskDriveContainerMenu(7, player.getInventory(),
                 new ResourceContainerData(List.of()));
         InfiniteDiskDriveMenu sourcesMenu = (InfiniteDiskDriveMenu) menu;
-        ItemStack cobblestoneDisk = disk(InfiniteDiskType.COBBLESTONE);
-        ItemStack waterDisk = disk(InfiniteDiskType.WATER);
+        ItemStack cobblestoneDisk = disk(TestCell.named("rsadvanced:cobblestone"));
+        ItemStack waterDisk = disk(TestCell.named("rsadvanced:water"));
         var repository = new StorageRepositoryImpl();
         assertEquals(new StorageInfo(0, 0),
                 ((StorageContainerItem) cobblestoneDisk.getItem()).getInfo(repository, cobblestoneDisk).orElseThrow());
@@ -54,28 +53,28 @@ public final class DiskDriveDisplayTest {
 
         // Player inventory slots must never be counted as installed infinite sources.
         player.getInventory().setItem(0, waterDisk.copy());
-        assertTrue(sourcesMenu.rsadvanced$getSources().infiniteTypes().isEmpty());
-        for (InfiniteDiskType type : InfiniteDiskType.values()) {
+        assertTrue(sourcesMenu.rsadvanced$getSources().resources().isEmpty());
+        for (TestCell type : TestCell.values()) {
             menu.getSlot(0).set(disk(type));
-            assertEquals(Set.of(type), sourcesMenu.rsadvanced$getSources().infiniteTypes());
+            assertEquals(Set.of(type.definition()), sourcesMenu.rsadvanced$getSources().resources());
             assertEquals(0, menu.getStored());
             assertEquals(0, menu.getCapacity());
             assertEquals(Double.valueOf(0.0), Double.valueOf(menu.getProgress()));
             List<Component> singleTooltip = new ArrayList<>();
             sourcesMenu.rsadvanced$getSources().appendTooltip(singleTooltip);
             assertEquals(List.of(Component.translatable("tooltip.rsadvanced.drive_infinite_source",
-                    Component.translatable(type.description().translationKey())).withStyle(net.minecraft.ChatFormatting.AQUA)),
+                    Component.empty().append(dev.rsadvanced.feature.disk.CellResourceNames.name(type.resource()))).withStyle(net.minecraft.ChatFormatting.AQUA)),
                     singleTooltip);
         }
         menu.getSlot(0).set(cobblestoneDisk.copy());
         menu.getSlot(1).set(cobblestoneDisk.copy());
         menu.getSlot(2).set(waterDisk.copy());
         var sources = sourcesMenu.rsadvanced$getSources();
-        assertEquals(Set.of(InfiniteDiskType.COBBLESTONE, InfiniteDiskType.WATER), sources.infiniteTypes());
+        assertEquals(Set.of(TestCell.named("rsadvanced:cobblestone").definition(), TestCell.named("rsadvanced:water").definition()), sources.resources());
         assertFalse(sources.hasOrdinaryDisks());
         List<Component> tooltip = new ArrayList<>();
         sources.appendTooltip(tooltip);
-        assertEquals(2, tooltip.size());
+        assertEquals(1, tooltip.size());
 
         var ordinaryDisk = BuiltInRegistries.ITEM.stream()
                 .filter(item -> item instanceof StorageContainerItem)
@@ -91,7 +90,7 @@ public final class DiskDriveDisplayTest {
         for (int slot = 0; slot < 3; slot++) {
             menu.getSlot(slot).set(ItemStack.EMPTY);
         }
-        assertTrue(sourcesMenu.rsadvanced$getSources().infiniteTypes().isEmpty());
+        assertTrue(sourcesMenu.rsadvanced$getSources().resources().isEmpty());
         assertEquals(25, menu.getStored());
         assertEquals(Double.valueOf(0.25), Double.valueOf(menu.getProgress()));
         menu.getSlot(3).set(ItemStack.EMPTY);
@@ -99,7 +98,7 @@ public final class DiskDriveDisplayTest {
         assertEquals(0, menu.getStored());
     }
 
-    private static ItemStack disk(InfiniteDiskType type) {
-        return new ItemStack(BuiltInRegistries.ITEM.get(RSAdvanced.id(type.itemName())));
+    private static ItemStack disk(TestCell type) {
+        return type.stack();
     }
 }

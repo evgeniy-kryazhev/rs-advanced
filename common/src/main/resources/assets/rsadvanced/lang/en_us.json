@@ -1,0 +1,10 @@
+{
+  "item.rsadvanced.infinite_cell": "Infinite Cell (%s)",
+  "item.rsadvanced.unknown_infinite_cell": "Unknown Infinite Cell",
+  "itemGroup.rsadvanced": "RS Advanced",
+  "tooltip.rsadvanced.absorbs_returns": "Absorbs its resource without accumulating it.",
+  "tooltip.rsadvanced.disk_drive": "Install in a Refined Storage Disk Drive",
+  "tooltip.rsadvanced.drive_infinite_source": "Infinite Resources (%s)",
+  "tooltip.rsadvanced.infinite_source": "∞ Inexhaustible resource source",
+  "tooltip.rsadvanced.unknown_definition": "Missing or incompatible cell definition: %s"
+}

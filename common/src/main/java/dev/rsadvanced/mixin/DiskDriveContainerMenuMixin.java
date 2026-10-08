@@ -36,7 +36,8 @@ public abstract class DiskDriveContainerMenuMixin implements InfiniteDiskDriveMe
     @Inject(method = "getProgress", at = @At("HEAD"), cancellable = true, require = 1)
     private void rsadvanced$keepSourceOnlyProgressEmpty(CallbackInfoReturnable<Double> callback) {
         DiskDriveSources sources = rsadvanced$getSources();
-        if (!sources.infiniteTypes().isEmpty() && !sources.hasOrdinaryDisks()) {
+        if (!sources.hasOrdinaryDisks() && diskSlots.stream()
+                .anyMatch(slot -> slot.getItem().getItem() instanceof InfiniteDiskItem)) {
             // No finite capacity exists; avoid RS's empty-stream 0/0 calculation.
             callback.setReturnValue(0.0);
         }

@@ -3,14 +3,27 @@ package dev.rsadvanced.client;
 import com.refinedmods.refinedstorage.common.api.RefinedStorageClientApi;
 import dev.architectury.networking.NetworkManager;
 import dev.rsadvanced.content.AdvancedContent;
-import dev.rsadvanced.feature.disk.InfiniteDiskType;
+import dev.rsadvanced.feature.disk.CellDefinitions;
+import dev.rsadvanced.feature.disk.DiskResourceKind;
 import dev.rsadvanced.network.InfiniteResourcesPayload;
+import java.util.Optional;
+import net.minecraft.client.Minecraft;
 
 public final class RSAdvancedClient {
     private RSAdvancedClient() {
     }
 
     public static void initialize() {
+        CellDefinitions.setDisplayLookup(definitionId -> {
+            Minecraft minecraft = Minecraft.getInstance();
+            if (!minecraft.isSameThread()) {
+                // Integrated-server messages must use the server's session, not client render state.
+                return CellDefinitions.serverDefinition(definitionId);
+            }
+            var connection = minecraft.getConnection();
+            return connection == null ? Optional.empty()
+                    : CellDefinitions.definition(connection.registryAccess(), definitionId);
+        });
         NetworkManager.registerReceiver(
                 NetworkManager.Side.S2C,
                 InfiniteResourcesPayload.TYPE,
@@ -19,9 +32,9 @@ public final class RSAdvancedClient {
     }
 
     public static void registerDiskModels() {
-        for (InfiniteDiskType type : InfiniteDiskType.values()) {
-            RefinedStorageClientApi.INSTANCE.registerDiskModel(AdvancedContent.disk(type).get(),
-                    type.description().kind().diskModel());
+        for (DiskResourceKind kind : DiskResourceKind.values()) {
+            RefinedStorageClientApi.INSTANCE.registerDiskModel(AdvancedContent.disk(kind).get(),
+                    kind.diskModel());
         }
     }
 }

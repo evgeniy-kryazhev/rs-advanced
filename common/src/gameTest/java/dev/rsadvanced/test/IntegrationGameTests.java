@@ -10,6 +10,10 @@ import net.minecraft.gametest.framework.TestFunction;
 public final class IntegrationGameTests {
     @GameTestGenerator
     public Collection<TestFunction> generateTests() {
+        if (Boolean.getBoolean("rsadvanced.test.clientServer")) {
+            return List.of(new TestFunction("rsadvanced", "rsadvanced.client_validation", "rsadvanced_test:empty",
+                    Integer.MAX_VALUE, 0, true, helper -> ClientValidationServer.completed = helper::succeed));
+        }
         return List.of(
                 create("mixed_disks", StorageIntegrationTest::diskWrappersPreserveInfiniteStockAndOrdinaryStock),
                 create("absorbed_returns", StorageIntegrationTest::returnedResourcesAreAbsorbedWithoutCacheGrowth),
@@ -17,12 +21,22 @@ public final class IntegrationGameTests {
                 create("grid_returns", GridInsertionTest::gridReturnsCobblestoneAndEmptiesWaterBucket),
                 create("exporter_limits", ExporterTransferTest::exporterRespectsQuotaAndDestinationCapacity),
                 create("disk_catalog", DiskCatalogTest::catalogResourcesAndQuotasAreComplete),
+                create("invalid_definitions", DiskCatalogTest::invalidDefinitionsAreRejected),
+                create("unknown_cells", DiskCatalogTest::unknownCellsKeepTheirComponents),
+                create("catalog_session", DiskCatalogTest::worldCatalogDoesNotLeakBetweenSessions),
                 create("drive_display", DiskDriveDisplayTest::driveStatisticsExcludeInfiniteDisks),
                 create("access_and_removal", StorageIntegrationTest::multipleDisksAndAccessChangesUpdateInfinityMetadata),
-                create("storage_codec", StorageIntegrationTest::sourceCodecStoresOnlyItsTypeSpecificEmptyState),
+                create("storage_codec", StorageIntegrationTest::sourceCodecStoresOnlyDefinitionIdentity),
                 create("disk_inventory_reload", DiskResourcesTest::standardDriveAcceptsDisksAndReloadsTheirStatelessItemStacks),
                 create("recipes_and_buckets", helper -> DiskResourcesTest.survivalRecipesMatchAndReturnEmptyBuckets(helper.getLevel())),
-                create("network_packet", DiskResourcesTest::infinityPacketRoundTripsMenuIdentityAndFlags));
+                create("network_packet", DiskResourcesTest::infinityPacketRoundTripsMenuIdentityAndResources),
+                new TestFunction("rsadvanced", "rsadvanced.datapack_reload", "rsadvanced_test:empty", 120000, 0, true, helper -> {
+                    try {
+                        DatapackReloadTest.reloadKeepsDefinitionsAndUpdatesRecipes(helper);
+                    } catch (Exception exception) {
+                        helper.fail("Cannot prepare datapack reload check: " + exception);
+                    }
+                }));
     }
 
     private static TestFunction create(String name, Check check) {
@@ -35,7 +49,7 @@ public final class IntegrationGameTests {
                 check.run(helper);
                 helper.succeed();
             } catch (Exception | AssertionError exception) {
-                throw new IllegalStateException("Integration check failed: " + name, exception);
+                throw new IllegalStateException("Integration check failed: " + name + ": " + exception.getMessage(), exception);
             }
         });
     }

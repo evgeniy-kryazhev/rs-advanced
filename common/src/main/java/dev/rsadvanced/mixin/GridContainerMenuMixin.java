@@ -1,12 +1,13 @@
 package dev.rsadvanced.mixin;
 
+import com.refinedmods.refinedstorage.api.resource.ResourceKey;
 import com.refinedmods.refinedstorage.common.api.grid.Grid;
 import com.refinedmods.refinedstorage.common.grid.AbstractGridContainerMenu;
 import dev.rsadvanced.RSAdvanced;
-import dev.rsadvanced.feature.disk.InfiniteDiskType;
 import dev.rsadvanced.feature.disk.InfiniteSources;
 import dev.rsadvanced.network.InfiniteGridMenu;
 import dev.rsadvanced.network.InfiniteResourcesPayload;
+import java.util.Set;
 import net.minecraft.server.level.ServerPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -16,39 +17,30 @@ import org.spongepowered.asm.mixin.Unique;
 public abstract class GridContainerMenuMixin implements InfiniteGridMenu {
     @Shadow
     private Grid grid;
-
     @Unique
-    private int rsadvanced$infiniteFlags;
-
+    private Set<ResourceKey> rsadvanced$infiniteResources = Set.of();
     @Unique
-    private int rsadvanced$lastSentFlags = -1;
+    private Set<ResourceKey> rsadvanced$lastSentResources;
 
     @Override
-    public int rsadvanced$getInfiniteFlags() {
-        return rsadvanced$infiniteFlags;
+    public Set<ResourceKey> rsadvanced$getInfiniteResources() {
+        return rsadvanced$infiniteResources;
     }
 
     @Override
-    public void rsadvanced$setInfiniteFlags(int flags) {
-        rsadvanced$infiniteFlags = flags;
+    public void rsadvanced$setInfiniteResources(Set<ResourceKey> resources) {
+        rsadvanced$infiniteResources = Set.copyOf(resources);
     }
 
     @Override
     public void rsadvanced$synchronize(ServerPlayer player) {
-        int flags = 0;
-        if (grid != null && grid.isGridActive()) {
-            for (InfiniteDiskType diskType : InfiniteDiskType.values()) {
-                if (InfiniteSources.contains(grid.getItemStorage(), diskType.resource())) {
-                    flags |= diskType.flag();
-                }
-            }
-        }
-        if (flags == rsadvanced$lastSentFlags) {
+        Set<ResourceKey> resources = grid != null && grid.isGridActive()
+                ? InfiniteSources.collect(grid.getItemStorage()) : Set.of();
+        if (resources.equals(rsadvanced$lastSentResources)) {
             return;
         }
-
-        rsadvanced$lastSentFlags = flags;
+        rsadvanced$lastSentResources = resources;
         AbstractGridContainerMenu menu = (AbstractGridContainerMenu) (Object) this;
-        RSAdvanced.sendInfiniteResources(player, new InfiniteResourcesPayload(menu.containerId, flags));
+        RSAdvanced.sendInfiniteResources(player, new InfiniteResourcesPayload(menu.containerId, resources));
     }
 }

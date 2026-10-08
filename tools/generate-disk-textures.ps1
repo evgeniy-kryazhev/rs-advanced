@@ -24,8 +24,8 @@ $diskPixels = @(
 )
 
 $diskVariants = @(
-    @{ Name = 'infinite_cobblestone_disk'; Accent = '#8C9298' },
-    @{ Name = 'infinite_water_disk'; Accent = '#2389E8' }
+    @{ Name = 'infinite_item_disk'; Accent = '#8C9298' },
+    @{ Name = 'infinite_fluid_disk'; Accent = '#2389E8' }
 )
 
 foreach ($diskVariant in $diskVariants) {

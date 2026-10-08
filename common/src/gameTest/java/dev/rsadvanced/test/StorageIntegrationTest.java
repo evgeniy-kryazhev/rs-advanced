@@ -10,13 +10,11 @@ import com.refinedmods.refinedstorage.api.storage.Actor;
 import com.refinedmods.refinedstorage.api.storage.StateTrackedStorage;
 import com.refinedmods.refinedstorage.api.storage.StorageImpl;
 import com.refinedmods.refinedstorage.api.storage.composite.CompositeStorage;
-import com.refinedmods.refinedstorage.api.storage.root.RootStorageImpl;
 import com.refinedmods.refinedstorage.api.storage.limited.LimitedStorageImpl;
-import dev.rsadvanced.feature.disk.InfiniteDiskType;
+import com.refinedmods.refinedstorage.api.storage.root.RootStorageImpl;
 import dev.rsadvanced.feature.disk.InfiniteResourceStorage;
 import dev.rsadvanced.feature.disk.InfiniteSources;
 import java.util.Set;
-
 
 import static dev.rsadvanced.test.TestAssertions.assertEquals;
 import static dev.rsadvanced.test.TestAssertions.assertFalse;
@@ -26,8 +24,8 @@ import static dev.rsadvanced.test.TestAssertions.assertTrue;
 /** Runs on both loaders, using the actual Disk Drive wrapper chain. */
 public class StorageIntegrationTest {
     public static void diskWrappersPreserveInfiniteStockAndOrdinaryStock() {
-        for (InfiniteDiskType diskType : InfiniteDiskType.values()) {
-            ResourceKey resource = diskType.resource();
+        for (TestCell cell : TestCell.values()) {
+            ResourceKey resource = cell.resource();
             StorageNetworkNode driveNode = new StorageNetworkNode(1, 1, 8);
             driveNode.setActive(true);
             CompositeStorage drive = (CompositeStorage) driveNode.getStorage();
@@ -35,13 +33,14 @@ public class StorageIntegrationTest {
             StorageImpl ordinary = new StorageImpl();
             ordinary.insert(resource, 25, Action.EXECUTE, Actor.EMPTY);
             StateTrackedStorage ordinaryDisk = new StateTrackedStorage(ordinary, null);
-            StateTrackedStorage infiniteDisk = new StateTrackedStorage(diskType.create(null, () -> { }), null);
+            StateTrackedStorage infiniteDisk = new StateTrackedStorage(cell.create(), null);
             drive.addSource(ordinaryDisk);
             drive.addSource(infiniteDisk);
 
             RootStorageImpl network = new RootStorageImpl();
             network.addSource(driveNode.getStorage());
             assertTrue(InfiniteSources.contains(network, resource));
+            assertTrue(InfiniteSources.collect(network).contains(resource));
 
             assertEquals(64, network.extract(resource, 64, Action.SIMULATE, Actor.EMPTY));
             assertEquals(InfiniteResourceStorage.ADVERTISED_AMOUNT + 25, network.get(resource));
@@ -56,6 +55,7 @@ public class StorageIntegrationTest {
             assertEquals(40, ordinary.getStored());
             drive.removeSource(infiniteDisk);
             assertFalse(InfiniteSources.contains(network, resource));
+            assertFalse(InfiniteSources.collect(network).contains(resource));
             assertEquals(40, network.get(resource));
             assertEquals(40, network.extract(resource, 64, Action.EXECUTE, Actor.EMPTY));
             assertEquals(0, network.get(resource));
@@ -63,13 +63,13 @@ public class StorageIntegrationTest {
     }
 
     public static void multipleDisksAndAccessChangesUpdateInfinityMetadata() {
-        InfiniteDiskType diskType = InfiniteDiskType.COBBLESTONE;
-        ResourceKey resource = diskType.resource();
+        TestCell cell = TestCell.named("rsadvanced:cobblestone");
+        ResourceKey resource = cell.resource();
         StorageNetworkNode node = new StorageNetworkNode(1, 1, 8);
         node.setActive(true);
         CompositeStorage drive = (CompositeStorage) node.getStorage();
-        StateTrackedStorage first = new StateTrackedStorage(diskType.create(null, () -> { }), null);
-        StateTrackedStorage second = new StateTrackedStorage(diskType.create(null, () -> { }), null);
+        StateTrackedStorage first = new StateTrackedStorage(cell.create(), null);
+        StateTrackedStorage second = new StateTrackedStorage(cell.create(), null);
         drive.addSource(first);
         drive.addSource(second);
         RootStorageImpl network = new RootStorageImpl();
@@ -79,36 +79,40 @@ public class StorageIntegrationTest {
         drive.removeSource(first);
         assertEquals(InfiniteResourceStorage.ADVERTISED_AMOUNT, network.get(resource));
         assertTrue(InfiniteSources.contains(network, resource));
+        assertTrue(InfiniteSources.collect(network).contains(resource));
 
         node.getStorageConfiguration().setAccessMode(AccessMode.INSERT);
         assertEquals(0, network.extract(resource, 64, Action.EXECUTE, Actor.EMPTY));
         assertFalse(InfiniteSources.contains(network, resource));
+        assertFalse(InfiniteSources.collect(network).contains(resource));
         node.getStorageConfiguration().setAccessMode(AccessMode.INSERT_EXTRACT);
         assertTrue(InfiniteSources.contains(network, resource));
+        assertTrue(InfiniteSources.collect(network).contains(resource));
         node.setActive(false);
         assertEquals(0, network.extract(resource, 64, Action.EXECUTE, Actor.EMPTY));
         assertFalse(InfiniteSources.contains(network, resource));
+        assertFalse(InfiniteSources.collect(network).contains(resource));
     }
 
-    public static void sourceCodecStoresOnlyItsTypeSpecificEmptyState() {
-        for (InfiniteDiskType diskType : InfiniteDiskType.values()) {
-            var codec = diskType.getMapCodec(() -> { }).codec();
-            var encoded = codec.encodeStart(JsonOps.INSTANCE, diskType.create(null, () -> { })).getOrThrow();
-            assertEquals("{}", encoded.toString());
+    public static void sourceCodecStoresOnlyDefinitionIdentity() {
+        for (TestCell cell : TestCell.values()) {
+            var codec = cell.getMapCodec(() -> { }).codec();
+            var encoded = codec.encodeStart(JsonOps.INSTANCE, cell.create()).getOrThrow();
+            assertEquals("{\"definition\":\"" + cell.id() + "\"}", encoded.toString());
             var decoded = codec.parse(JsonOps.INSTANCE, encoded).getOrThrow();
             assertInstanceOf(InfiniteResourceStorage.class, decoded);
-            assertEquals(diskType, decoded.getType());
-            assertEquals(64, decoded.extract(diskType.resource(), 64, Action.EXECUTE, Actor.EMPTY));
+            assertEquals(cell.storageType(), decoded.getType());
+            assertEquals(64, decoded.extract(cell.resource(), 64, Action.EXECUTE, Actor.EMPTY));
         }
     }
 
     public static void returnedResourcesAreAbsorbedWithoutCacheGrowth() {
-        for (InfiniteDiskType diskType : InfiniteDiskType.values()) {
-            ResourceKey resource = diskType.resource();
+        for (TestCell cell : TestCell.values()) {
+            ResourceKey resource = cell.resource();
             StorageNetworkNode node = new StorageNetworkNode(1, 1, 8);
             node.setActive(true);
             CompositeStorage drive = (CompositeStorage) node.getStorage();
-            StateTrackedStorage disk = new StateTrackedStorage(diskType.create(null, () -> { }), null);
+            StateTrackedStorage disk = new StateTrackedStorage(cell.create(), null);
             drive.addSource(disk);
             RootStorageImpl network = new RootStorageImpl();
             network.addSource(node.getStorage());
@@ -146,9 +150,9 @@ public class StorageIntegrationTest {
     }
 
     public static void insertionPreservesFiniteStockPrioritiesAndVoidExcess() {
-        for (InfiniteDiskType diskType : InfiniteDiskType.values()) {
-            ResourceKey resource = diskType.resource();
-            ResourceKey foreignResource = java.util.Arrays.stream(InfiniteDiskType.values())
+        for (TestCell cell : TestCell.values()) {
+            ResourceKey resource = cell.resource();
+            ResourceKey foreignResource = TestCell.values().stream()
                     .filter(candidate -> !candidate.resource().equals(resource))
                     .findFirst().orElseThrow().resource();
             StorageNetworkNode node = new StorageNetworkNode(1, 1, 8);
@@ -156,7 +160,7 @@ public class StorageIntegrationTest {
             CompositeStorage drive = (CompositeStorage) node.getStorage();
             LimitedStorageImpl ordinary = new LimitedStorageImpl(10);
             drive.addSource(new StateTrackedStorage(ordinary, null));
-            StateTrackedStorage infinite = new StateTrackedStorage(diskType.create(null, () -> { }), null);
+            StateTrackedStorage infinite = new StateTrackedStorage(cell.create(), null);
             drive.addSource(infinite);
             RootStorageImpl network = new RootStorageImpl();
             network.addSource(node.getStorage());
@@ -196,4 +200,3 @@ public class StorageIntegrationTest {
         }
     }
 }
-

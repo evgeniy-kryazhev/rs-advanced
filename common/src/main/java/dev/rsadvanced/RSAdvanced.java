@@ -1,13 +1,15 @@
 package dev.rsadvanced;
 
-import dev.rsadvanced.feature.AdvancedFeatures;
-import dev.rsadvanced.content.AdvancedContent;
-import dev.rsadvanced.network.AdvancedNetworking;
-import dev.rsadvanced.network.InfiniteResourcesPayload;
-import dev.rsadvanced.network.InfiniteGridMenu;
 import dev.architectury.event.events.common.LifecycleEvent;
 import dev.architectury.event.events.common.TickEvent;
 import dev.architectury.networking.NetworkManager;
+import dev.rsadvanced.content.AdvancedComponents;
+import dev.rsadvanced.content.AdvancedContent;
+import dev.rsadvanced.feature.AdvancedFeatures;
+import dev.rsadvanced.feature.disk.CellDefinitions;
+import dev.rsadvanced.network.AdvancedNetworking;
+import dev.rsadvanced.network.InfiniteGridMenu;
+import dev.rsadvanced.network.InfiniteResourcesPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -23,7 +25,12 @@ public final class RSAdvanced {
     }
 
     public static void initialize() {
+        AdvancedComponents.register();
         AdvancedContent.register();
+        LifecycleEvent.SERVER_BEFORE_START.register(server ->
+                CellDefinitions.startSession(server.registryAccess()));
+        LifecycleEvent.SERVER_STOPPED.register(server ->
+                CellDefinitions.endSession());
         AdvancedNetworking.register();
         LifecycleEvent.SETUP.register(AdvancedFeatures::initialize);
         TickEvent.SERVER_POST.register(server -> {

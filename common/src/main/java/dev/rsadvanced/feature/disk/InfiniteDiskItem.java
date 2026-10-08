@@ -4,6 +4,7 @@ import com.refinedmods.refinedstorage.common.api.storage.SerializableStorage;
 import com.refinedmods.refinedstorage.common.api.storage.StorageContainerItem;
 import com.refinedmods.refinedstorage.common.api.storage.StorageInfo;
 import com.refinedmods.refinedstorage.common.api.storage.StorageRepository;
+import dev.rsadvanced.content.AdvancedComponents;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.ChatFormatting;
@@ -13,32 +14,52 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 
 public final class InfiniteDiskItem extends Item implements StorageContainerItem {
-    private final InfiniteDiskType diskType;
+    private final DiskResourceKind kind;
 
-    public InfiniteDiskItem(InfiniteDiskType diskType) {
+    public InfiniteDiskItem(DiskResourceKind kind) {
         super(new Item.Properties().stacksTo(1));
-        this.diskType = diskType;
+        this.kind = kind;
     }
 
-    public InfiniteDiskType diskType() {
-        return diskType;
+    public DiskResourceKind kind() {
+        return kind;
+    }
+
+    public Optional<CellDefinition> displayDefinition(ItemStack stack) {
+        return CellDefinitions.displayDefinition(stack.get(AdvancedComponents.CELL_DEFINITION.get()))
+                .filter(definition -> definition.kind() == kind);
+    }
+
+    @Override
+    public Component getName(ItemStack stack) {
+        return displayDefinition(stack)
+                .map(definition -> Component.translatable("item.rsadvanced.infinite_cell",
+                        CellResourceNames.name(definition.resourceKey())))
+                .orElseGet(() -> Component.translatable("item.rsadvanced.unknown_infinite_cell"));
     }
 
     @Override
     public Optional<SerializableStorage> resolve(StorageRepository repository, ItemStack stack) {
-        // Each slot gets its own source, while all state is determined by the item type.
-        return Optional.of(diskType.create(null, () -> { }));
+        var definitionId = stack.get(AdvancedComponents.CELL_DEFINITION.get());
+        return CellDefinitions.serverDefinition(definitionId)
+                .filter(definition -> definition.kind() == kind)
+                .map(definition -> InfiniteStorageType.forKind(kind).create(definitionId, definition));
     }
 
     @Override
     public Optional<StorageInfo> getInfo(StorageRepository repository, ItemStack stack) {
-        // UI metadata describes physical stock, not the source's virtual availability.
         return Optional.of(new StorageInfo(0, 0));
     }
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, context, tooltip, flag);
+        if (displayDefinition(stack).isEmpty()) {
+            var definitionId = stack.get(AdvancedComponents.CELL_DEFINITION.get());
+            tooltip.add(Component.translatable("tooltip.rsadvanced.unknown_definition",
+                    definitionId == null ? "—" : definitionId.toString()).withStyle(ChatFormatting.RED));
+            return;
+        }
         tooltip.add(Component.translatable("tooltip.rsadvanced.infinite_source").withStyle(ChatFormatting.AQUA));
         tooltip.add(Component.translatable("tooltip.rsadvanced.disk_drive").withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.translatable("tooltip.rsadvanced.absorbs_returns").withStyle(ChatFormatting.GRAY));

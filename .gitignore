@@ -7,4 +7,3 @@
 .vscode/
 *.iml
 output/
-common/src/generated/resources/.cache/

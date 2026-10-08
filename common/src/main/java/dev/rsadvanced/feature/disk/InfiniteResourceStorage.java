@@ -11,18 +11,27 @@ import com.refinedmods.refinedstorage.common.api.storage.StorageType;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import net.minecraft.resources.ResourceLocation;
 
 public final class InfiniteResourceStorage implements SerializableStorage, CompositeAwareChild, InfiniteSource {
     public static final long ADVERTISED_AMOUNT = 1_000_000_000L;
 
     private final ResourceKey resource;
     private final StorageType type;
+    private final ResourceLocation definitionId;
     private final List<ResourceAmount> contents;
 
-    public InfiniteResourceStorage(ResourceKey resource, StorageType type) {
+    public InfiniteResourceStorage(ResourceKey resource, StorageType type,
+                                   ResourceLocation definitionId) {
+        this.definitionId = Objects.requireNonNull(definitionId, "An infinite cell requires a definition ID");
         this.resource = Objects.requireNonNull(resource);
         this.type = Objects.requireNonNull(type);
         this.contents = List.of(new ResourceAmount(resource, ADVERTISED_AMOUNT));
+    }
+
+    public ResourceLocation definitionId() {
+        return definitionId;
     }
 
     @Override
@@ -67,6 +76,11 @@ public final class InfiniteResourceStorage implements SerializableStorage, Compo
     @Override
     public boolean rsadvanced$isInfinite(ResourceKey requestedResource) {
         return resource.equals(requestedResource);
+    }
+
+    @Override
+    public Set<ResourceKey> rsadvanced$getInfiniteResources() {
+        return Set.of(resource);
     }
 
     @Override

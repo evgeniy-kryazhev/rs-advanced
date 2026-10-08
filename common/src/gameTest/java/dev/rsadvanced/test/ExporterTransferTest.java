@@ -16,7 +16,6 @@ import com.refinedmods.refinedstorage.common.api.exporter.ExporterTransferStrate
 import com.refinedmods.refinedstorage.common.api.upgrade.UpgradeItem;
 import com.refinedmods.refinedstorage.common.api.upgrade.UpgradeState;
 import com.refinedmods.refinedstorage.common.support.resource.ItemResource;
-import dev.rsadvanced.feature.disk.InfiniteDiskType;
 import dev.rsadvanced.feature.disk.InfiniteResourceStorage;
 import java.lang.reflect.Proxy;
 import net.minecraft.core.BlockPos;
@@ -40,14 +39,14 @@ public final class ExporterTransferTest {
                 .getExporterTransferStrategyRegistry().getAll().stream()
                 .filter(candidate -> candidate.getResourceType() == ItemResource.class)
                 .findFirst().orElseThrow();
-        ResourceKey resource = InfiniteDiskType.COBBLESTONE.resource();
+        ResourceKey resource = TestCell.named("rsadvanced:cobblestone").resource();
 
         for (boolean infinite : new boolean[]{false, true}) {
             StorageNetworkNode drive = new StorageNetworkNode(1, 1, 8);
             drive.setActive(true);
             StorageImpl ordinaryStorage = new StorageImpl();
             ordinaryStorage.insert(resource, 4_096, Action.EXECUTE, Actor.EMPTY);
-            var source = infinite ? InfiniteDiskType.COBBLESTONE.create(null, () -> { }) : ordinaryStorage;
+            var source = infinite ? TestCell.named("rsadvanced:cobblestone").create() : ordinaryStorage;
             ((CompositeStorage) drive.getStorage()).addSource(new StateTrackedStorage(source, null));
             RootStorageImpl rootStorage = new RootStorageImpl();
             rootStorage.addSource(drive.getStorage());

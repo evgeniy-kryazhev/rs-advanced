@@ -9,6 +9,7 @@ import com.refinedmods.refinedstorage.api.storage.StorageImpl;
 import com.refinedmods.refinedstorage.api.storage.composite.CompositeStorageImpl;
 import com.refinedmods.refinedstorage.common.api.storage.SerializableStorage;
 import com.refinedmods.refinedstorage.common.api.storage.StorageType;
+import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,11 +17,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class InfiniteResourceStorageTest {
     private static final ResourceKey RESOURCE = new TestResource("cobblestone");
+    private static final ResourceLocation DEFINITION_ID = ResourceLocation.parse("test:cell");
     private static final StorageType TYPE = new TestStorageType();
 
     @Test
     void repeatedExtractionAndSimulationLeaveSourceAndCompositeUnchanged() {
-        InfiniteResourceStorage source = new InfiniteResourceStorage(RESOURCE, TYPE);
+        InfiniteResourceStorage source = new InfiniteResourceStorage(RESOURCE, TYPE, DEFINITION_ID);
         CompositeStorageImpl composite = new CompositeStorageImpl(MutableResourceListImpl.create());
         composite.addSource(source);
 
@@ -35,8 +37,8 @@ class InfiniteResourceStorageTest {
     @Test
     void multipleSourcesCanBeRemovedWithoutLosingOrdinaryStock() {
         CompositeStorageImpl composite = new CompositeStorageImpl(MutableResourceListImpl.create());
-        InfiniteResourceStorage firstSource = new InfiniteResourceStorage(RESOURCE, TYPE);
-        InfiniteResourceStorage secondSource = new InfiniteResourceStorage(RESOURCE, TYPE);
+        InfiniteResourceStorage firstSource = new InfiniteResourceStorage(RESOURCE, TYPE, DEFINITION_ID);
+        InfiniteResourceStorage secondSource = new InfiniteResourceStorage(RESOURCE, TYPE, DEFINITION_ID);
         StorageImpl ordinary = new StorageImpl(MutableResourceListImpl.create());
         ordinary.insert(RESOURCE, 25, Action.EXECUTE, Actor.EMPTY);
         composite.addSource(firstSource);
@@ -55,7 +57,7 @@ class InfiniteResourceStorageTest {
     @Test
     void insertionIsAbsorbedWithoutGrowingSourceOrComposite() {
         CompositeStorageImpl composite = new CompositeStorageImpl(MutableResourceListImpl.create());
-        InfiniteResourceStorage source = new InfiniteResourceStorage(RESOURCE, TYPE);
+        InfiniteResourceStorage source = new InfiniteResourceStorage(RESOURCE, TYPE, DEFINITION_ID);
         StorageImpl ordinary = new StorageImpl(MutableResourceListImpl.create());
         composite.addSource(source);
         composite.addSource(ordinary);
@@ -71,7 +73,7 @@ class InfiniteResourceStorageTest {
 
     @Test
     void acceptsOwnResourceAndRejectsForeignResourcesAndInvalidAmounts() {
-        InfiniteResourceStorage source = new InfiniteResourceStorage(RESOURCE, TYPE);
+        InfiniteResourceStorage source = new InfiniteResourceStorage(RESOURCE, TYPE, DEFINITION_ID);
         for (Action action : Action.values()) {
             assertEquals(0, source.extract(new TestResource("stone"), 64, action, Actor.EMPTY));
             assertEquals(64, source.insert(RESOURCE, 64, action, Actor.EMPTY));
@@ -87,7 +89,7 @@ class InfiniteResourceStorageTest {
     private static final class TestStorageType implements StorageType {
         @Override
         public SerializableStorage create(Long capacity, Runnable listener) {
-            return new InfiniteResourceStorage(RESOURCE, this);
+            return new InfiniteResourceStorage(RESOURCE, this, DEFINITION_ID);
         }
 
         @Override

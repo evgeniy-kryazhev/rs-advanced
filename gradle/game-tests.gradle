@@ -41,6 +41,45 @@ loom {
             source sourceSets.gameTest
             runDir 'build/run/gameTest'
         }
+        serverValidation {
+            inherit gameTest
+            if (project.name == 'neoforge') {
+                environment 'gametestserver'
+                forgeTemplate 'gameTestServer'
+                mods {
+                    rsadvanced {
+                        sourceSet sourceSets.main
+                    }
+                    rsadvanced_test {
+                        sourceSet sourceSets.gameTest
+                    }
+                }
+            }
+            runDir 'build/run/serverValidation'
+            property 'rsadvanced.test.clientServer', 'true'
+            property 'rsadvanced.test.port', project.name == 'fabric' ? '25575' : '25576'
+        }
+        clientValidation {
+            inherit client
+            if (project.name == 'neoforge') {
+                forgeTemplate 'client'
+            }
+            source sourceSets.gameTest
+            runDir 'build/run/clientValidation'
+            property 'rsadvanced.test.clientValidation', 'true'
+            property 'rsadvanced.test.clientReport', project.layout.buildDirectory.file('reports/clientValidation/results.txt').get().asFile.absolutePath
+            programArgs '--quickPlayMultiplayer', project.name == 'fabric' ? '127.0.0.1:25575' : '127.0.0.1:25576'
+            if (project.name == 'neoforge') {
+                mods {
+                    rsadvanced {
+                        sourceSet sourceSets.main
+                    }
+                    rsadvanced_test {
+                        sourceSet sourceSets.gameTest
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -58,4 +97,40 @@ tasks.named('runGameTest') {
 
 tasks.named('check') {
     dependsOn tasks.named('runGameTest')
+}
+
+// The example is an actual external world datapack, in addition to the test mod's bundled definitions.
+['runGameTest', 'runServerValidation'].each { taskName ->
+    tasks.named(taskName) {
+        dependsOn tasks.named('gameTestClasses')
+        doFirst {
+            String directory = taskName == 'runGameTest' ? 'gameTest' : 'serverValidation'
+            copy {
+                from rootProject.file('common/src/gameTest/externalDatapack')
+                into project.layout.buildDirectory.dir("run/${directory}/world/datapacks/rsadvanced-priority-check")
+            }
+            copy {
+                from rootProject.file('docs/examples/lava-datapack')
+                into project.layout.buildDirectory.dir("run/${directory}/world/datapacks/rsadvanced-example")
+            }
+        }
+    }
+}
+
+tasks.named('runClientValidation') {
+    dependsOn tasks.named('gameTestClasses')
+    doFirst {
+        project.layout.buildDirectory.dir('reports/clientValidation').get().asFile.mkdirs()
+        delete project.layout.buildDirectory.file('reports/clientValidation/results.txt')
+        copy {
+            from rootProject.file('common/src/gameTest/clientResources')
+            into project.layout.buildDirectory.dir('run/clientValidation/resourcepacks')
+        }
+    }
+    doLast {
+        File report = project.layout.buildDirectory.file('reports/clientValidation/results.txt').get().asFile
+        if (!report.exists() || report.text.trim() != 'PASSED') {
+            throw new GradleException(report.exists() ? report.text : 'Client check did not produce a report')
+        }
+    }
 }

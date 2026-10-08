@@ -21,7 +21,7 @@ public abstract class DiskDriveTooltipMixin {
             return;
         }
         DiskDriveSources sources = drive.rsadvanced$getSources();
-        if (sources.infiniteTypes().isEmpty()) {
+        if (sources.resources().isEmpty()) {
             return;
         }
         List<Component> tooltip = sources.hasOrdinaryDisks()
