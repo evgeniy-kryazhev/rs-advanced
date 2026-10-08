@@ -1,0 +1,8 @@
+{
+  "itemGroup.rsadvanced": "RS Advanced",
+  "item.rsadvanced.infinite_cobblestone_disk": "Infinite Cobblestone Disk",
+  "item.rsadvanced.infinite_water_disk": "Infinite Water Disk",
+  "tooltip.rsadvanced.infinite_source": "∞ Inexhaustible resource source",
+  "tooltip.rsadvanced.disk_drive": "Install in a Refined Storage Disk Drive",
+  "tooltip.rsadvanced.extraction_only": "Extraction only. Returned resources require ordinary storage."
+}

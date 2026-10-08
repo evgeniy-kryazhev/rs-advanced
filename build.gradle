@@ -1,0 +1,52 @@
+plugins {
+    id 'base'
+    id 'net.neoforged.moddev' version '2.0.148' apply false
+    id 'fabric-loom' version '1.10.5' apply false
+}
+
+subprojects {
+    apply plugin: 'java-library'
+    group = 'dev.rsadvanced'
+    version = rootProject.mod_version
+
+    java {
+        toolchain.languageVersion = JavaLanguageVersion.of(21)
+        withSourcesJar()
+    }
+
+    repositories {
+        mavenCentral()
+        maven { url = 'https://maven.creeperhost.net' }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.release = 21
+    }
+
+    tasks.named('processResources') {
+        def metadata = [
+            modVersion: rootProject.mod_version,
+            minecraftVersion: rootProject.minecraft_version,
+            refinedStorageVersion: rootProject.refined_storage_version,
+            neoforgeVersion: rootProject.neoforge_version,
+            fabricLoaderVersion: rootProject.fabric_loader_version
+        ]
+        inputs.properties(metadata)
+        filesMatching(['META-INF/neoforge.mods.toml', 'fabric.mod.json']) {
+            expand(metadata)
+        }
+    }
+
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+    }
+
+    dependencies {
+        compileOnly 'org.apiguardian:apiguardian-api:1.1.2'
+    }
+}
+
+tasks.named('build') {
+    dependsOn ':common:build', ':neoforge:build', ':fabric:build'
+}

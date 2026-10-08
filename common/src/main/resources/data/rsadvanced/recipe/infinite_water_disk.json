@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {"item": "refinedstorage:storage_housing"},
+    {"item": "minecraft:water_bucket"},
+    {"item": "minecraft:water_bucket"}
+  ],
+  "result": {"id": "rsadvanced:infinite_water_disk", "count": 1}
+}

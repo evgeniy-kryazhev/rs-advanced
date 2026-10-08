@@ -1,0 +1,18 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_storage_housing": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [{"items": "refinedstorage:storage_housing"}]
+      }
+    }
+  },
+  "requirements": [["has_storage_housing"]],
+  "rewards": {
+    "recipes": [
+      "rsadvanced:infinite_cobblestone_disk",
+      "rsadvanced:infinite_water_disk"
+    ]
+  }
+}

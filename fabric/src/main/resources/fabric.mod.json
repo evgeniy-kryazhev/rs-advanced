@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "rsadvanced",
+  "version": "${modVersion}",
+  "name": "RS Advanced",
+  "description": "Extensions for Refined Storage 2. Includes infinite cobblestone and water disks.",
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["dev.rsadvanced.fabric.RSAdvancedFabric"],
+    "client": ["dev.rsadvanced.fabric.RSAdvancedFabricClient"]
+  },
+  "mixins": ["rsadvanced.mixins.json"],
+  "depends": {
+    "fabricloader": ">=${fabricLoaderVersion}",
+    "fabric-api": "*",
+    "minecraft": "${minecraftVersion}",
+    "java": ">=21",
+    "refinedstorage": "${refinedStorageVersion}"
+  }
+}
