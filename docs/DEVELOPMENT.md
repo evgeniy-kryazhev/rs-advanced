@@ -179,3 +179,22 @@ Fabric → NeoForge из-за блокировки общего агента Arc
 Отчёты: `common/build/reports/tests/test`, `<loader>/build/reports/gameTest/results.xml`,
 `<loader>/build/reports/clientValidation/results.txt`.
 Ручные визуальные сценарии перечислены в [VALIDATION.md](../VALIDATION.md).
+
+## CI и релизы
+
+GitHub Actions запускает сборку и тесты для push и pull request. JAR и отчёты
+не загружаются в Actions artifacts; результаты тестов остаются в журнале jobs.
+
+Push тега вида `v0.1.0` после успешного `build` запускает отдельную job `release`.
+Она собирает два выпускных JAR из того же коммита и прикладывает их к GitHub Release.
+Версия внутри JAR и в имени файла берётся из тега без префикса `v`.
+Для обычных сборок используется `mod_version` из `gradle.properties`.
+
+Релиз публикуется после загрузки обоих файлов. Повторный запуск заменяет assets
+с теми же именами. Теги с суффиксом, например `v0.2.0-rc.1`, создают prerelease.
+PR и обычный push ветки ничего не публикуют. Для GitHub Release используется
+`GITHUB_TOKEN` с правом `contents: write`.
+
+Actions artifacts не используются даже для передачи JAR между jobs, поэтому
+job релиза повторяет упаковку после тестов. Минуты Actions и кэш Gradle
+по-прежнему расходуются. Уже загруженные старые artifacts автоматически не удаляются.
