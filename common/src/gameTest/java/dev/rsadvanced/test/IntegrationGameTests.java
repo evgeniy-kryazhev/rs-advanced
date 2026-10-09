@@ -15,6 +15,12 @@ public final class IntegrationGameTests {
                     Integer.MAX_VALUE, 0, true, helper -> ClientValidationServer.completed = helper::succeed));
         }
         return List.of(
+                create("anchor_container_counts", AnchorIntegrationTest::incrementalContainerCounts),
+                create("anchor_persistence_recipe_permissions", AnchorIntegrationTest::persistenceRecipeAndPermissions),
+                new TestFunction("rsadvanced", "rsadvanced.anchor_topology_power", "rsadvanced_test:empty",
+                        200, 0, true, AnchorIntegrationTest::topologyAndPower),
+                new TestFunction("rsadvanced", "rsadvanced.anchor_overlaps_merge_limit", "rsadvanced_test:empty",
+                        200, 0, true, AnchorIntegrationTest::overlapsMergesAndLimit),
                 create("mixed_disks", StorageIntegrationTest::diskWrappersPreserveInfiniteStockAndOrdinaryStock),
                 create("cache_lookup", CacheLookupIntegrationTest::infiniteTransfersDoNotCopyTheDriveCatalog),
                 create("absorbed_returns", StorageIntegrationTest::returnedResourcesAreAbsorbedWithoutCacheGrowth),

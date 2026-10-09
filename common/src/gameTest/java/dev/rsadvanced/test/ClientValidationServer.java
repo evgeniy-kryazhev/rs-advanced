@@ -27,5 +27,10 @@ public final class ClientValidationServer {
             }
         });
         PlayerEvent.PLAYER_QUIT.register(player -> player.getServer().execute(() -> completed.run()));
+        PlayerEvent.PLAYER_JOIN.register(player -> player.getServer().execute(() -> {
+            // Give the actual client a nearby block for the normal interaction/open-menu packet path.
+            player.serverLevel().setBlockAndUpdate(player.blockPosition().east(2),
+                    dev.rsadvanced.feature.anchor.AnchorContent.BLOCK.get().defaultBlockState());
+        }));
     }
 }

@@ -7,5 +7,6 @@ public final class ServerCheckInitializer implements ModInitializer {
     @Override
     public void onInitialize() {
         ClientValidationServer.register();
+        dev.rsadvanced.test.AnchorRestartScenario.register();
     }
 }

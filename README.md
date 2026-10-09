@@ -10,6 +10,25 @@ An addon for **Refined Storage 2** that expands storage and automation. Includes
 
 - **Infinite Cobblestone Cell** — an endless source of cobblestone.
 - **Infinite Water Cell** — an endless source of water.
+- **Network Anchor** — keeps chunks containing connected RS nodes loaded in its own dimension.
+
+An enabled Network Anchor costs `80 + N × (N + 1) / 2` FE per tick for `N` unique
+network chunks. Anchors in the same network and dimension share the area: the anchor with
+the lowest X, then Y, then Z pays, and the others serve as reserves. A separate dimension
+needs its own anchor. Insufficient power immediately releases the area. The default limit
+is 256 chunks; exceeding it stops the entire area.
+
+Craft an anchor with a Machine Casing in the center, Advanced Processors in the corners,
+and Ender Pearls on the four sides. Its screen shows the state, area, cost and role, and lets
+you enable it or show the area's white contour with translucent blue faces within 64 blocks.
+Adjacent chunks form one area without internal walls or intermediate chunk divisions.
+The screen uses the vanilla Minecraft panel and buttons. Opening uses RS `OPEN` permission;
+changing enabled state uses `BUILD`.
+
+The shared mod configuration `config/rsadvanced.json` controls `baseCost` (80), `chunkCostMultiplier` (1), `maxChunks`
+(256), and `randomTicks` (true). Restart the server to apply changes. Random ticks follow
+`randomTickSpeed`; the anchor does not create additional natural mob spawning. On restart,
+the last paid area is restored for at most 100 ticks while the RS graph initializes.
 
 Each cell shows a small resource icon in its lower-right corner in inventories. Infinite cells appear in the Refined Storage creative tab. Hold Shift over a cell to view its help tooltip.
 

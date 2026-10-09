@@ -6,6 +6,8 @@ import dev.rsadvanced.content.AdvancedContent;
 import dev.rsadvanced.feature.disk.CellDefinitions;
 import dev.rsadvanced.feature.disk.DiskResourceKind;
 import dev.rsadvanced.network.InfiniteResourcesPayload;
+import dev.architectury.event.events.client.ClientTickEvent;
+import dev.rsadvanced.feature.anchor.AnchorStatePayload;
 import java.util.Optional;
 import net.minecraft.client.Minecraft;
 
@@ -14,6 +16,11 @@ public final class RSAdvancedClient {
     }
 
     public static void initialize() {
+        ClientTickEvent.CLIENT_POST.register(AnchorVisualization::tick);
+        NetworkManager.registerReceiver(NetworkManager.Side.S2C,
+                AnchorStatePayload.TYPE,
+                AnchorStatePayload.CODEC,
+                (payload, context) -> context.queue(() -> AnchorVisualization.receive(payload)));
         CellDefinitions.setDisplayLookup(definitionId -> {
             Minecraft minecraft = Minecraft.getInstance();
             if (!minecraft.isSameThread()) {

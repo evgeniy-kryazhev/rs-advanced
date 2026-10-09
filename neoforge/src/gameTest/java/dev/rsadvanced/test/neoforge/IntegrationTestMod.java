@@ -17,6 +17,7 @@ import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 public final class IntegrationTestMod {
     public IntegrationTestMod(IEventBus modBus) {
         ClientValidationServer.register();
+        dev.rsadvanced.test.AnchorRestartScenario.register();
         EnvExecutor.runInEnv(Env.CLIENT, () -> CellPresentationClientCheck::register);
         modBus.addListener(IntegrationTestMod::registerTests);
     }

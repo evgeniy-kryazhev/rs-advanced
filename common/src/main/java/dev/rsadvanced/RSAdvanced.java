@@ -5,7 +5,13 @@ import dev.architectury.event.events.common.TickEvent;
 import dev.architectury.networking.NetworkManager;
 import dev.rsadvanced.content.AdvancedComponents;
 import dev.rsadvanced.content.AdvancedContent;
+import dev.rsadvanced.config.RSAdvancedConfig;
 import dev.rsadvanced.feature.AdvancedFeatures;
+import com.refinedmods.refinedstorage.common.api.RefinedStorageApi;
+import dev.rsadvanced.feature.anchor.AnchorContent;
+import dev.rsadvanced.feature.anchor.AnchorManager;
+import dev.rsadvanced.feature.anchor.AnchorNetworkComponent;
+import dev.rsadvanced.feature.anchor.AnchorNetworking;
 import dev.rsadvanced.feature.disk.CellDefinitions;
 import dev.rsadvanced.network.AdvancedNetworking;
 import dev.rsadvanced.network.InfiniteGridMenu;
@@ -27,12 +33,28 @@ public final class RSAdvanced {
     public static void initialize() {
         AdvancedComponents.register();
         AdvancedContent.register();
-        LifecycleEvent.SERVER_BEFORE_START.register(server ->
-                CellDefinitions.startSession(server.registryAccess()));
+        AnchorContent.register();
+        LifecycleEvent.SERVER_STARTED.register(AnchorManager::start);
+        LifecycleEvent.SERVER_STOPPING.register(server -> {
+            AnchorManager.stop(server);
+            AnchorNetworking.clear();
+        });
+        TickEvent.SERVER_PRE.register(AnchorManager::tick);
+        TickEvent.SERVER_LEVEL_PRE.register(AnchorManager::beforeLevelTick);
+        TickEvent.SERVER_LEVEL_POST.register(AnchorManager::afterLevelTick);
+        TickEvent.SERVER_POST.register(AnchorNetworking::tick);
+        LifecycleEvent.SERVER_BEFORE_START.register(server -> {
+            RSAdvancedConfig.load();
+            CellDefinitions.startSession(server.registryAccess());
+        });
         LifecycleEvent.SERVER_STOPPED.register(server ->
                 CellDefinitions.endSession());
         AdvancedNetworking.register();
-        LifecycleEvent.SETUP.register(AdvancedFeatures::initialize);
+        LifecycleEvent.SETUP.register(() -> {
+            AdvancedFeatures.initialize();
+            RefinedStorageApi.INSTANCE.getNetworkComponentMapFactory()
+                    .addFactory(AnchorNetworkComponent.class, AnchorNetworkComponent::new);
+        });
         TickEvent.SERVER_POST.register(server -> {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 if (player.containerMenu instanceof InfiniteGridMenu menu) {

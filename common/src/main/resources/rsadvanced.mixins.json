@@ -4,6 +4,7 @@
   "package": "dev.rsadvanced.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "AnchorChunkTickMixin",
     "CompositeStorageAccessor",
     "StateTrackedStorageMixin",
     "ConfiguredStorageMixin",
@@ -12,6 +13,7 @@
     "DiskDriveContainerMenuMixin"
   ],
   "client": [
+    "client.AnchorVisualizationMixin",
     "client.GridResourceMixin",
     "client.DiskDriveTooltipMixin",
     "client.DiskModelRegistrationMixin",

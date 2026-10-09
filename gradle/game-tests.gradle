@@ -43,6 +43,13 @@ loom {
         }
         serverValidation {
             inherit gameTest
+            if (project.name == 'fabric') {
+                property 'fabric-api.gametest.report-file', project.layout.buildDirectory
+                        .file('reports/serverValidation/results.xml').get().asFile.absolutePath
+            } else {
+                property 'rsadvanced.test.reportFile', project.layout.buildDirectory
+                        .file('reports/serverValidation/results.xml').get().asFile.absolutePath
+            }
             if (project.name == 'neoforge') {
                 environment 'gametestserver'
                 forgeTemplate 'gameTestServer'
@@ -80,6 +87,54 @@ loom {
                 }
             }
         }
+        ['seed', 'check', 'empty', 'norandom'].each { phase ->
+            create("anchorRestart${phase.capitalize()}") {
+                inherit server
+                source sourceSets.gameTest
+                runDir phase == 'norandom' ? 'build/run/anchorNoRandom' : 'build/run/anchorRestart'
+                property 'rsadvanced.test.anchorRestart', phase
+                property 'rsadvanced.test.anchorReport', project.layout.buildDirectory
+                        .file("reports/anchorRestart/${phase}.txt").get().asFile.absolutePath
+                if (project.name == 'neoforge') {
+                    environment 'server'
+                    forgeTemplate 'server'
+                    mods {
+                        rsadvanced { sourceSet sourceSets.main }
+                        rsadvanced_test { sourceSet sourceSets.gameTest }
+                    }
+                }
+            }
+        }
+    }
+}
+
+['seed', 'check', 'empty', 'norandom'].eachWithIndex { phase, index ->
+    tasks.named("runAnchorRestart${phase.capitalize()}") {
+        dependsOn tasks.named('gameTestClasses')
+        if (index > 0 && index < 3) {
+            mustRunAfter "runAnchorRestart${['seed', 'check', 'empty'][index - 1].capitalize()}"
+        }
+        doFirst {
+            File runDirectory = project.layout.buildDirectory.dir(phase == 'norandom' ? 'run/anchorNoRandom' : 'run/anchorRestart').get().asFile
+            runDirectory.mkdirs()
+            new File(runDirectory, 'eula.txt').text = 'eula=true\n'
+            new File(runDirectory, 'server.properties').text =
+                    'online-mode=false\nserver-ip=127.0.0.1\nserver-port=0\nview-distance=2\nsimulation-distance=2\nlevel-type=minecraft:flat\ngenerate-structures=false\n'
+            File configurationDirectory = new File(runDirectory, 'config')
+            configurationDirectory.mkdirs()
+            String rsConfigurationFile = project.name == 'neoforge'
+                    ? 'refinedstorage-common.toml' : 'refinedstorage.toml'
+            new File(configurationDirectory, rsConfigurationFile).text = '[controller]\nenergyCapacity = 100000\n'
+            new File(configurationDirectory, 'rsadvanced.json').text = groovy.json.JsonOutput.prettyPrint(
+                    groovy.json.JsonOutput.toJson([baseCost: 80, chunkCostMultiplier: 1, maxChunks: 256, randomTicks: phase != 'norandom']))
+            project.layout.buildDirectory.file("reports/anchorRestart/${phase}.txt").get().asFile.delete()
+        }
+        doLast {
+            File report = project.layout.buildDirectory.file("reports/anchorRestart/${phase}.txt").get().asFile
+            if (!report.exists() || !report.text.startsWith('PASSED:')) {
+                throw new GradleException(report.exists() ? report.text : 'Restart scenario did not produce a report')
+            }
+        }
     }
 }
 
@@ -105,6 +160,7 @@ tasks.named('check') {
         dependsOn tasks.named('gameTestClasses')
         doFirst {
             String directory = taskName == 'runGameTest' ? 'gameTest' : 'serverValidation'
+            project.layout.buildDirectory.dir("reports/${directory}").get().asFile.mkdirs()
             copy {
                 from rootProject.file('common/src/gameTest/externalDatapack')
                 into project.layout.buildDirectory.dir("run/${directory}/world/datapacks/rsadvanced-priority-check")

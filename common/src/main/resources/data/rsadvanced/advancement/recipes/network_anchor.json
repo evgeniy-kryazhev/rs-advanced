@@ -1,0 +1,1 @@
+{"parent":"minecraft:recipes/root","criteria":{"has_casing":{"trigger":"minecraft:inventory_changed","conditions":{"items":[{"items":"refinedstorage:machine_casing"}]}},"has_recipe":{"trigger":"minecraft:recipe_unlocked","conditions":{"recipe":"rsadvanced:network_anchor"}}},"requirements":[["has_casing","has_recipe"]],"rewards":{"recipes":["rsadvanced:network_anchor"]}}

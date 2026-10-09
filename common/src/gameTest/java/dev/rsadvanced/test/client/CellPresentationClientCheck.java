@@ -16,6 +16,10 @@ import com.refinedmods.refinedstorage.common.support.tooltip.SmallTextClientTool
 import dev.architectury.event.events.client.ClientTickEvent;
 import dev.rsadvanced.RSAdvanced;
 import dev.rsadvanced.client.InfiniteGridDisplay;
+import dev.rsadvanced.client.AnchorScreen;
+import dev.rsadvanced.feature.anchor.AnchorMenu;
+import dev.rsadvanced.feature.anchor.AnchorContent;
+import dev.rsadvanced.feature.anchor.AnchorStatus;
 import dev.rsadvanced.content.AdvancedComponents;
 import dev.rsadvanced.content.AdvancedContent;
 import dev.rsadvanced.feature.disk.CellDefinitions;
@@ -58,6 +62,10 @@ public final class CellPresentationClientCheck {
     private static final Logger LOGGER = LoggerFactory.getLogger("rsadvanced-client-check");
     private static final long STARTED_AT = System.nanoTime();
     private static boolean started;
+    private static int anchorPreviewTicks;
+    private static int anchorInteractionTicks;
+    private static boolean anchorInteractionSent;
+    private static int anchorInteractionStage;
 
     public static void register() {
         if (Boolean.getBoolean("rsadvanced.test.clientValidation")) {
@@ -66,6 +74,34 @@ public final class CellPresentationClientCheck {
     }
 
     private static void tick(Minecraft minecraft) {
+        if (anchorInteractionTicks > 0) {
+            checkAnchorInteraction(minecraft);
+            return;
+        }
+        if (anchorPreviewTicks > 0) {
+            anchorPreviewTicks++;
+            if (anchorPreviewTicks == 80) {
+                try (var pixels = net.minecraft.client.Screenshot.takeScreenshot(minecraft.getMainRenderTarget())) {
+                    Path screenshot = Path.of(System.getProperty("rsadvanced.test.clientReport"))
+                            .resolveSibling("network-anchor-menu.png");
+                    pixels.writeToFile(screenshot);
+                    minecraft.setScreen(null);
+                    AnchorVisualizationClientCheck.start(minecraft);
+                } catch (Exception exception) {
+                    finish(minecraft, exception);
+                }
+            }
+            if (anchorPreviewTicks >= 110 && (anchorPreviewTicks - 110) % 30 == 0) {
+                try {
+                    if (AnchorVisualizationClientCheck.captureAndAdvance(minecraft)) {
+                        finish(minecraft, null);
+                    }
+                } catch (Exception exception) {
+                    finish(minecraft, exception);
+                }
+            }
+            return;
+        }
         if (started) {
             return;
         }
@@ -280,7 +316,10 @@ public final class CellPresentationClientCheck {
                             .resolveSibling("cell-resource-icons.png");
                     try (var pixels = net.minecraft.client.Screenshot.takeScreenshot(minecraft.getMainRenderTarget())) {
                         pixels.writeToFile(screenshot);
-                        finish(minecraft, null);
+                        minecraft.execute(() -> {
+                            minecraft.setScreen(null);
+                            anchorInteractionTicks = 1;
+                        });
                     } catch (Exception exception) {
                         finish(minecraft, exception);
                     }
@@ -293,6 +332,62 @@ public final class CellPresentationClientCheck {
                 return AdvancedContent.cell(id, kind);
             }
         });
+    }
+
+    private static void showAnchorPreview(Minecraft minecraft) {
+        var menu = new AnchorMenu(89, minecraft.player.getInventory(),
+                minecraft.player.blockPosition());
+        menu.enabled = true;
+        menu.leader = true;
+        menu.status = AnchorStatus.ACTIVE;
+        menu.areaSize = 2;
+        menu.heldSize = 2;
+        menu.cost = 83;
+        minecraft.setScreen(new AnchorScreen(menu, minecraft.player.getInventory(),
+                Component.translatable("block.rsadvanced.network_anchor")));
+        anchorPreviewTicks = 1;
+    }
+
+    private static void checkAnchorInteraction(Minecraft minecraft) {
+        try {
+            anchorInteractionTicks++;
+            if (anchorInteractionTicks > 200) {
+                throw new AssertionError("Anchor interaction did not complete: stage=" + anchorInteractionStage
+                        + ", screen=" + minecraft.screen + ", menu=" + minecraft.player.containerMenu);
+            }
+            var position = minecraft.player.blockPosition().east(2);
+            if (!anchorInteractionSent) {
+                if (!minecraft.level.getBlockState(position).is(AnchorContent.BLOCK.get())) {
+                    return;
+                }
+                minecraft.gameMode.useItemOn(minecraft.player, net.minecraft.world.InteractionHand.MAIN_HAND,
+                        new net.minecraft.world.phys.BlockHitResult(position.getCenter(),
+                                net.minecraft.core.Direction.UP, position, false));
+                anchorInteractionSent = true;
+                return;
+            }
+            if (!(minecraft.screen instanceof AnchorScreen)
+                    || !(minecraft.player.containerMenu instanceof AnchorMenu menu)) {
+                return;
+            }
+            assertEquals(position, menu.position);
+            if (anchorInteractionStage == 0 && menu.enabled) {
+                // This must travel through the vanilla button packet and return in the server snapshot.
+                minecraft.gameMode.handleInventoryButtonClick(menu.containerId, 0);
+                anchorInteractionStage = 1;
+            } else if (anchorInteractionStage == 1 && !menu.enabled) {
+                assertEquals(AnchorStatus.DISABLED, menu.status);
+                minecraft.gameMode.handleInventoryButtonClick(menu.containerId, 0);
+                anchorInteractionStage = 2;
+            } else if (anchorInteractionStage == 2 && menu.enabled) {
+                LOGGER.info("Anchor right-click opened registered screen; server confirmed disable and enable");
+                minecraft.player.closeContainer();
+                anchorInteractionTicks = 0;
+                showAnchorPreview(minecraft);
+            }
+        } catch (Exception | AssertionError failure) {
+            finish(minecraft, failure);
+        }
     }
 
     private static void finish(Minecraft minecraft, Throwable failure) {

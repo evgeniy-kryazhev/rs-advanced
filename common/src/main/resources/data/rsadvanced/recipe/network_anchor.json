@@ -1,0 +1,1 @@
+{"type":"minecraft:crafting_shaped","category":"misc","pattern":["PEP","EME","PEP"],"key":{"P":{"item":"refinedstorage:advanced_processor"},"E":{"item":"minecraft:ender_pearl"},"M":{"item":"refinedstorage:machine_casing"}},"result":{"id":"rsadvanced:network_anchor","count":1}}
