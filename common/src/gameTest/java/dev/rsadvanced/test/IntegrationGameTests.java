@@ -16,6 +16,7 @@ public final class IntegrationGameTests {
         }
         return List.of(
                 create("mixed_disks", StorageIntegrationTest::diskWrappersPreserveInfiniteStockAndOrdinaryStock),
+                create("cache_lookup", CacheLookupIntegrationTest::infiniteTransfersDoNotCopyTheDriveCatalog),
                 create("absorbed_returns", StorageIntegrationTest::returnedResourcesAreAbsorbedWithoutCacheGrowth),
                 create("insertion_priorities", StorageIntegrationTest::insertionPreservesFiniteStockPrioritiesAndVoidExcess),
                 create("grid_returns", GridInsertionTest::gridReturnsCobblestoneAndEmptiesWaterBucket),

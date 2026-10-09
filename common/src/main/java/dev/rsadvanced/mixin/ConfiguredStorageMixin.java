@@ -3,7 +3,6 @@ package dev.rsadvanced.mixin;
 import com.refinedmods.refinedstorage.api.core.Action;
 import com.refinedmods.refinedstorage.api.network.impl.storage.AbstractConfiguredProxyStorage;
 import com.refinedmods.refinedstorage.api.network.impl.storage.StorageConfiguration;
-import com.refinedmods.refinedstorage.api.resource.ResourceAmount;
 import com.refinedmods.refinedstorage.api.resource.ResourceKey;
 import com.refinedmods.refinedstorage.api.resource.filter.FilterMode;
 import com.refinedmods.refinedstorage.api.storage.Actor;
@@ -56,7 +55,7 @@ public abstract class ConfiguredStorageMixin implements InfiniteSource {
             return;
         }
 
-        long before = rsadvanced$getAmount(resource);
+        long before = action == Action.EXECUTE ? rsadvanced$getAmount(resource) : 0;
         long extracted = delegate.extract(resource, amount, action, actor);
         long cacheChange = action == Action.EXECUTE ? before - rsadvanced$getAmount(resource) : 0;
         // A drive can mix ordinary and infinite disks; only the finite portion changes its parent cache.
@@ -65,12 +64,9 @@ public abstract class ConfiguredStorageMixin implements InfiniteSource {
 
     @Unique
     private long rsadvanced$getAmount(ResourceKey resource) {
-        for (ResourceAmount entry : delegate.getAll()) {
-            if (entry.resource().equals(resource)) {
-                return entry.amount();
-            }
-        }
-        return 0;
+        // Both callers require a CompositeStorageImpl. Read its current cache without copying all resources.
+        CompositeStorageAccessor composite = (CompositeStorageAccessor) delegate;
+        return composite.rsadvanced$getResourceList().get(resource);
     }
 
     @Inject(method = "compositeInsert", at = @At("HEAD"), cancellable = true, require = 1)
@@ -84,7 +80,7 @@ public abstract class ConfiguredStorageMixin implements InfiniteSource {
             return;
         }
 
-        long before = rsadvanced$getAmount(resource);
+        long before = action == Action.EXECUTE ? rsadvanced$getAmount(resource) : 0;
         long inserted = delegate.insert(resource, amount, action, actor);
         long cacheChange = action == Action.EXECUTE ? rsadvanced$getAmount(resource) - before : 0;
         // Only resources kept by ordinary disks increase the parent cache.

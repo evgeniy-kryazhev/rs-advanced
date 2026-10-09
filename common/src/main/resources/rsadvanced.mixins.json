@@ -4,6 +4,7 @@
   "package": "dev.rsadvanced.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "CompositeStorageAccessor",
     "StateTrackedStorageMixin",
     "ConfiguredStorageMixin",
     "RootStorageMixin",
