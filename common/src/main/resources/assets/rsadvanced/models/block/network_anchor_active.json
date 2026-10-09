@@ -1,1 +1,8 @@
-{"parent":"minecraft:block/cube_all","textures":{"all":"rsadvanced:block/network_anchor_active"}}
+{
+    "parent": "minecraft:block/cube_bottom_top",
+    "textures": {
+        "side": "rsadvanced:block/network_anchor_active",
+        "top": "rsadvanced:block/network_anchor_top_active",
+        "bottom": "rsadvanced:block/network_anchor_top"
+    }
+}
