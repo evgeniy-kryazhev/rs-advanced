@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/rsadvanced-icon.png" alt="RS Advanced logo" width="256">
+  <img src="assets/rsadvanced-icon.png" alt="RS Advanced logo" width="256">
 </p>
 
 # RS Advanced
@@ -42,7 +42,7 @@ Cells need no initial filling and never run out. They also absorb returned resou
 
 Add item or fluid definitions and ordinary crafting recipes through a datapack — no Java changes,
 compilation or datagen needed. Names use the resource’s client translation automatically.
-See the [lava datapack example](docs/examples/lava-datapack) and [setup instructions](docs/DEVELOPMENT.md).
+See the [lava datapack example](examples/lava-datapack). Add it to your world's `datapacks` directory before opening the world.
 Reopen the world or restart the server after changing cell definitions.
 
 ## Installation
@@ -61,6 +61,6 @@ Use the release JAR matching your loader. Forge is not supported.
 
 With JDK 21 installed, run `gradlew.bat build` on Windows or `bash gradlew build` on Linux/macOS. Release JARs are in `fabric/build/libs` and `neoforge/build/libs`; use the files without `dev` or `sources` in their names.
 
-See [development notes](docs/DEVELOPMENT.md) and [validation results](VALIDATION.md) for architecture, tests, and known limitations.
+See [Repository Guidelines](AGENTS.md) for contributor instructions, architecture, and validation commands.
 
 Licensed under the [MIT License](LICENSE).

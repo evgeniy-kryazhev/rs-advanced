@@ -166,7 +166,7 @@ tasks.named('check') {
                 into project.layout.buildDirectory.dir("run/${directory}/world/datapacks/rsadvanced-priority-check")
             }
             copy {
-                from rootProject.file('docs/examples/lava-datapack')
+                from rootProject.file('examples/lava-datapack')
                 into project.layout.buildDirectory.dir("run/${directory}/world/datapacks/rsadvanced-example")
             }
         }
