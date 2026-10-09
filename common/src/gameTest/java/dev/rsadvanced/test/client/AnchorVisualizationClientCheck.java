@@ -63,7 +63,7 @@ final class AnchorVisualizationClientCheck {
         };
         AnchorVisualization.receive(new AnchorStatePayload(-1, UUID.randomUUID(),
                 minecraft.level.dimension().location(), anchor, AnchorStatus.ACTIVE,
-                chunks.size(), chunks.size(), 90, true, true, true, chunks));
+                chunks.size(), chunks.size(), 90, true, true, true, true, 256, chunks));
 
         if (scene == 2) {
             // Block north faces lie exactly on the overlay plane; the camera sees both faces and edges.

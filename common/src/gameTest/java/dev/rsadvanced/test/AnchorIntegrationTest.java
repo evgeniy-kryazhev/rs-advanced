@@ -1,14 +1,21 @@
 package dev.rsadvanced.test;
 
-import com.refinedmods.refinedstorage.common.content.Blocks;
 import com.refinedmods.refinedstorage.api.core.Action;
+import com.refinedmods.refinedstorage.common.content.Blocks;
 import com.refinedmods.refinedstorage.common.controller.ControllerBlockEntity;
 import dev.rsadvanced.feature.anchor.AnchorBlockEntity;
 import dev.rsadvanced.feature.anchor.AnchorContent;
 import dev.rsadvanced.feature.anchor.AnchorManager;
+import dev.rsadvanced.feature.anchor.AnchorStatePayload;
+import dev.rsadvanced.feature.anchor.AnchorNetworking;
 import dev.rsadvanced.feature.anchor.AnchorStatus;
+import dev.rsadvanced.feature.anchor.AnchorVisualizationRefreshPayload;
+import io.netty.buffer.Unpooled;
+import java.util.Set;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.ChunkPos;
 
@@ -17,6 +24,98 @@ import static dev.rsadvanced.test.TestAssertions.assertTrue;
 
 /** Actual world nodes and each loader's registered lookup/capability; no mock network. */
 public final class AnchorIntegrationTest {
+    public static void visualizationSelectionLifecycle(GameTestHelper helper) throws ReflectiveOperationException {
+        var level = helper.getLevel();
+        BlockPos position = new BlockPos(23008, 80, 23008);
+        level.setBlockAndUpdate(position, AnchorContent.BLOCK.get().defaultBlockState());
+        AnchorBlockEntity anchor = (AnchorBlockEntity) level.getBlockEntity(position);
+        var player = helper.makeMockServerPlayerInLevel();
+        player.setPos(position.getCenter());
+        AnchorNetworking.toggleVisualization(player, anchor);
+        tickVisualizationSelection(level.getServer());
+        assertTrue(AnchorNetworking.isVisualizing(player, anchor.instanceId()));
+
+        int radius = dev.rsadvanced.config.RSAdvancedConfig.get().anchorVisualizationDistance();
+        player.setPos(position.getCenter().add(radius + 1, 0, 0));
+        tickVisualizationSelection(level.getServer());
+        assertTrue(AnchorNetworking.isVisualizing(player, anchor.instanceId()));
+        player.setPos(position.getCenter());
+        tickVisualizationSelection(level.getServer());
+        assertTrue(AnchorNetworking.isVisualizing(player, anchor.instanceId()));
+
+        var permission = new com.refinedmods.refinedstorage.common.security.PlatformSecurityNetworkComponentImpl(
+                com.refinedmods.refinedstorage.api.network.security.SecurityPolicy.of(
+                        com.refinedmods.refinedstorage.common.security.BuiltinPermission.BUILD));
+        var deniedNetwork = (com.refinedmods.refinedstorage.api.network.Network) java.lang.reflect.Proxy.newProxyInstance(
+                com.refinedmods.refinedstorage.api.network.Network.class.getClassLoader(),
+                new Class<?>[]{com.refinedmods.refinedstorage.api.network.Network.class}, (proxy, method, arguments) -> {
+                    if (method.getName().equals("getComponent") && arguments[0]
+                            == com.refinedmods.refinedstorage.common.api.security.PlatformSecurityNetworkComponent.class) {
+                        return permission;
+                    }
+                    throw new IllegalStateException("Unexpected denied-network access: " + method.getName());
+                });
+        anchor.node().setNetwork(deniedNetwork);
+        assertTrue(!anchor.canOpen(player));
+        tickVisualizationSelection(level.getServer());
+        assertTrue(!AnchorNetworking.isVisualizing(player, anchor.instanceId()));
+        anchor.node().setNetwork(null);
+
+        AnchorNetworking.toggleVisualization(player, anchor);
+        anchor.setEnabled(false);
+        tickVisualizationSelection(level.getServer());
+        assertTrue(!AnchorNetworking.isVisualizing(player, anchor.instanceId()));
+        anchor.setEnabled(true);
+
+        AnchorNetworking.toggleVisualization(player, anchor);
+        level.getServer().getCommands().performPrefixedCommand(player.createCommandSourceStack().withPermission(4),
+                "execute in minecraft:the_nether run tp @s 0 80 0");
+        assertTrue(player.serverLevel() != level);
+        tickVisualizationSelection(level.getServer());
+        assertTrue(!AnchorNetworking.isVisualizing(player, anchor.instanceId()));
+        level.getServer().getCommands().performPrefixedCommand(player.createCommandSourceStack().withPermission(4),
+                "execute in " + level.dimension().location() + " run tp @s "
+                        + position.getX() + " " + position.getY() + " " + position.getZ());
+
+        AnchorNetworking.toggleVisualization(player, anchor);
+        level.getServer().getPlayerList().remove(player);
+        tickVisualizationSelection(level.getServer());
+        assertTrue(!AnchorNetworking.isVisualizing(player, anchor.instanceId()));
+        level.removeBlock(position, false);
+    }
+
+    private static void tickVisualizationSelection(net.minecraft.server.MinecraftServer server)
+            throws ReflectiveOperationException {
+        // Embedded GameTest players have no NeoForge payload handshake; real clients cover the transport.
+        var method = AnchorNetworking.class.getDeclaredMethod("updateSelections",
+                net.minecraft.server.MinecraftServer.class, java.util.function.BiConsumer.class);
+        method.setAccessible(true);
+        java.util.function.BiConsumer<net.minecraft.server.level.ServerPlayer, AnchorStatePayload> sink =
+                (player, payload) -> { };
+        method.invoke(null, server, sink);
+    }
+
+    public static void visualizationPacket(GameTestHelper helper) {
+        var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(),
+                helper.getLevel().registryAccess());
+        try {
+            var owner = UUID.randomUUID();
+            for (boolean visible : new boolean[] {true, false}) {
+                var chunks = visible ? Set.of(new ChunkPos(-2, 3).toLong()) : Set.<Long>of();
+                var payload = new AnchorStatePayload(-1, owner,
+                        helper.getLevel().dimension().location(), new BlockPos(-17, 80, 48),
+                        AnchorStatus.ACTIVE, 1, 1, 81, true, true, true, visible, 96, chunks);
+                AnchorStatePayload.CODEC.encode(buffer, payload);
+                assertEquals(payload, AnchorStatePayload.CODEC.decode(buffer));
+            }
+            var refresh = new AnchorVisualizationRefreshPayload(owner);
+            AnchorVisualizationRefreshPayload.CODEC.encode(buffer, refresh);
+            assertEquals(refresh, AnchorVisualizationRefreshPayload.CODEC.decode(buffer));
+        } finally {
+            buffer.release();
+        }
+    }
+
     public static void topologyAndPower(GameTestHelper helper) {
         var level = helper.getLevel();
         BlockPos controllerPosition = new BlockPos(20014, 80, 20008);

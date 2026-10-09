@@ -160,6 +160,13 @@ tasks.named('check') {
         dependsOn tasks.named('gameTestClasses')
         doFirst {
             String directory = taskName == 'runGameTest' ? 'gameTest' : 'serverValidation'
+            if (taskName == 'runServerValidation') {
+                File configDirectory = project.layout.buildDirectory.dir('run/serverValidation/config').get().asFile
+                configDirectory.mkdirs()
+                new File(configDirectory, 'rsadvanced.json').text = groovy.json.JsonOutput.toJson(
+                        [baseCost: 80, chunkCostMultiplier: 1, maxChunks: 256, randomTicks: true,
+                         anchorVisualizationDistance: 96])
+            }
             project.layout.buildDirectory.dir("reports/${directory}").get().asFile.mkdirs()
             copy {
                 from rootProject.file('common/src/gameTest/externalDatapack')

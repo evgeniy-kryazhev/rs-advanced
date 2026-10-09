@@ -1,12 +1,33 @@
 package dev.rsadvanced.config;
 
-import com.google.gson.Gson;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class RSAdvancedConfigTest {
+    @Test
+    void visualizationDistanceSupportsDefaultsAndExplicitBounds() {
+        assertEquals(256, RSAdvancedConfig.DEFAULT.anchorVisualizationDistance());
+        for (int distance : new int[] {1, 96, 4096}) {
+            String json = """
+                    {"baseCost":80,"chunkCostMultiplier":1,"maxChunks":256,"randomTicks":true,
+                     "anchorVisualizationDistance":%d}
+                    """.formatted(distance);
+            assertEquals(distance, RSAdvancedConfig.fromJson(json).anchorVisualizationDistance());
+        }
+    }
+
+    @Test
+    void rejectsExplicitInvalidVisualizationDistance() {
+        for (String distance : new String[] {"0", "-1", "4097", "1.5", "2147483648", "null", "true", "\"256\""}) {
+            String json = """
+                    {"baseCost":80,"chunkCostMultiplier":1,"maxChunks":256,"randomTicks":true,
+                     "anchorVisualizationDistance":%s}
+                    """.formatted(distance);
+            assertThrows(RuntimeException.class, () -> RSAdvancedConfig.fromJson(json));
+        }
+    }
     @Test
     void readsExistingConfigurationKeys() {
         String json = """
@@ -17,7 +38,7 @@ class RSAdvancedConfigTest {
                   "randomTicks": false
                 }
                 """;
-        RSAdvancedConfig config = new Gson().fromJson(json, RSAdvancedConfig.class);
+        RSAdvancedConfig config = RSAdvancedConfig.fromJson(json);
 
         assertEquals(new RSAdvancedConfig(10, 2, 32, false), config);
     }

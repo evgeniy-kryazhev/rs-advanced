@@ -20,13 +20,15 @@ is 256 chunks; exceeding it stops the entire area.
 
 Craft an anchor with a Machine Casing in the center, Advanced Processors in the corners,
 and Ender Pearls on the four sides. Its screen shows the state, area, cost and role, and lets
-you enable it or show the area's white contour with translucent blue faces within 64 blocks.
+you enable it or show the area's white contour with translucent blue faces within 256 blocks by default.
+Walking or flying beyond this radius pauses the overlay and its area updates while keeping
+it selected; returning automatically shows the latest area. The radius includes height.
 Adjacent chunks form one area without internal walls or intermediate chunk divisions.
 The screen uses the vanilla Minecraft panel and buttons. Opening uses RS `OPEN` permission;
 changing enabled state uses `BUILD`.
 
 The shared mod configuration `config/rsadvanced.json` controls `baseCost` (80), `chunkCostMultiplier` (1), `maxChunks`
-(256), and `randomTicks` (true). Restart the server to apply changes. Random ticks follow
+(256), `randomTicks` (true), and `anchorVisualizationDistance` (256 blocks, integer 1–4096). Restart the server to apply changes. Random ticks follow
 `randomTickSpeed`; the anchor does not create additional natural mob spawning. On restart,
 the last paid area is restored for at most 100 ticks while the RS graph initializes.
 

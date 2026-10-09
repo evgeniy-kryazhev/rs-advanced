@@ -2,8 +2,10 @@ package dev.rsadvanced.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import dev.architectury.networking.NetworkManager;
 import dev.rsadvanced.feature.anchor.AnchorMenu;
 import dev.rsadvanced.feature.anchor.AnchorStatePayload;
+import dev.rsadvanced.feature.anchor.AnchorVisualizationRefreshPayload;
 import java.util.Set;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -15,6 +17,9 @@ import org.joml.Vector4f;
 /** Selection lives outside the screen; never alters server chunk ownership. */
 public final class AnchorVisualization {
     private static AnchorStatePayload selection;
+    private static boolean awaitingFreshSnapshot;
+    private static boolean outsideRadius;
+    private static Set<Long> geometryChunks = Set.of();
     private static AnchorBoundaryGeometry geometry = AnchorBoundaryGeometry.build(Set.of());
 
     private AnchorVisualization() {
@@ -39,29 +44,57 @@ public final class AnchorVisualization {
             clearSelection();
             return;
         }
-        if (selection == null || !selection.chunks().equals(payload.chunks())) {
+        if (!payload.visible()) {
+            selection = payload;
+            awaitingFreshSnapshot = true;
+            return;
+        }
+        if (minecraft.player != null && minecraft.player.distanceToSqr(payload.position().getCenter())
+                > (double) payload.visualizationDistance() * payload.visualizationDistance()) {
+            // A visible packet may have been sent before the player crossed the boundary locally.
+            selection = payload;
+            awaitingFreshSnapshot = true;
+            outsideRadius = true;
+            return;
+        }
+        if (!geometryChunks.equals(payload.chunks())) {
             geometry = AnchorBoundaryGeometry.build(payload.chunks());
+            geometryChunks = payload.chunks();
         }
         selection = payload;
+        awaitingFreshSnapshot = false;
     }
 
     public static void tick(Minecraft minecraft) {
         if (selection != null && (minecraft.level == null || minecraft.player == null
-                || !minecraft.level.dimension().location().equals(selection.dimension())
-                || minecraft.player.distanceToSqr(selection.position().getCenter()) > 64 * 64)) {
+                || !minecraft.level.dimension().location().equals(selection.dimension()))) {
             clearSelection();
+        }
+        if (selection != null) {
+            boolean outside = minecraft.player.distanceToSqr(selection.position().getCenter())
+                    > (double) selection.visualizationDistance() * selection.visualizationDistance();
+            if (outside) {
+                // Never redisplay cached geometry on return before the server supplies the current area.
+                awaitingFreshSnapshot = true;
+            } else if (outsideRadius) {
+                NetworkManager.sendToServer(new AnchorVisualizationRefreshPayload(selection.owner()));
+            }
+            outsideRadius = outside;
         }
     }
 
     private static void clearSelection() {
         selection = null;
+        awaitingFreshSnapshot = false;
+        outsideRadius = false;
+        geometryChunks = Set.of();
         geometry = AnchorBoundaryGeometry.build(Set.of());
     }
 
     public static void render(Camera camera, Matrix4f viewMatrix, Matrix4f projectionMatrix) {
         Minecraft minecraft = Minecraft.getInstance();
         tick(minecraft);
-        if (selection == null || selection.chunks().isEmpty()) {
+        if (selection == null || !selection.visible() || awaitingFreshSnapshot || selection.chunks().isEmpty()) {
             return;
         }
         PoseStack pose = new PoseStack();

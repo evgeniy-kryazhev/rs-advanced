@@ -66,6 +66,7 @@ public final class CellPresentationClientCheck {
     private static int anchorInteractionTicks;
     private static boolean anchorInteractionSent;
     private static int anchorInteractionStage;
+    private static boolean checkingAnchorDistance;
 
     public static void register() {
         if (Boolean.getBoolean("rsadvanced.test.clientValidation")) {
@@ -74,6 +75,17 @@ public final class CellPresentationClientCheck {
     }
 
     private static void tick(Minecraft minecraft) {
+        if (checkingAnchorDistance) {
+            try {
+                if (AnchorDistanceClientCheck.tick(minecraft)) {
+                    checkingAnchorDistance = false;
+                    showAnchorPreview(minecraft);
+                }
+            } catch (Exception | AssertionError failure) {
+                finish(minecraft, failure);
+            }
+            return;
+        }
         if (anchorInteractionTicks > 0) {
             checkAnchorInteraction(minecraft);
             return;
@@ -381,9 +393,13 @@ public final class CellPresentationClientCheck {
                 anchorInteractionStage = 2;
             } else if (anchorInteractionStage == 2 && menu.enabled) {
                 LOGGER.info("Anchor right-click opened registered screen; server confirmed disable and enable");
+                minecraft.gameMode.handleInventoryButtonClick(menu.containerId, 1);
+                anchorInteractionStage = 3;
+            } else if (anchorInteractionStage == 3 && menu.visualizing) {
+                AnchorDistanceClientCheck.start(minecraft, position);
                 minecraft.player.closeContainer();
                 anchorInteractionTicks = 0;
-                showAnchorPreview(minecraft);
+                checkingAnchorDistance = true;
             }
         } catch (Exception | AssertionError failure) {
             finish(minecraft, failure);

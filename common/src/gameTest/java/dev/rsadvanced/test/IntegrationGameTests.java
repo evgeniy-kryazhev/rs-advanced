@@ -15,6 +15,8 @@ public final class IntegrationGameTests {
                     Integer.MAX_VALUE, 0, true, helper -> ClientValidationServer.completed = helper::succeed));
         }
         return List.of(
+                create("anchor_visualization_lifecycle", AnchorIntegrationTest::visualizationSelectionLifecycle),
+                create("anchor_visualization_packet", AnchorIntegrationTest::visualizationPacket),
                 create("anchor_container_counts", AnchorIntegrationTest::incrementalContainerCounts),
                 create("anchor_persistence_recipe_permissions", AnchorIntegrationTest::persistenceRecipeAndPermissions),
                 new TestFunction("rsadvanced", "rsadvanced.anchor_topology_power", "rsadvanced_test:empty",
