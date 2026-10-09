@@ -1,7 +1,7 @@
 # Проверка RS Advanced
 
 Minecraft 1.21.1, Java 21, Refined Storage 2.0.9, Architectury API 13.0.11,
-Fabric Loader 0.17.2 / Fabric API 0.116.6+1.21.1 и NeoForge 21.1.256.
+Fabric Loader 0.17.2 / Fabric API 0.116.6+1.21.1 и NeoForge 21.1.252.
 
 ## Сборка и автоматические тесты
 

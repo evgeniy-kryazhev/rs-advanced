@@ -28,7 +28,7 @@ Reopen the world or restart the server after changing cell definitions.
 
 ## Installation
 
-For **Minecraft 1.21.1** with **NeoForge 21.1.256+** or **Fabric Loader 0.17.2+**. Requires Java 21.
+For **Minecraft 1.21.1** with **NeoForge 21.1.252+** or **Fabric Loader 0.17.2+**. Requires Java 21.
 
 Install RS Advanced on both the client and server, together with:
 
