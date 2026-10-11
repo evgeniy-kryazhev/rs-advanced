@@ -41,4 +41,6 @@ Use the shared `config/rsadvanced.json` through `RSAdvancedConfig`; settings req
 
 ## Commit & Pull Request Guidelines
 
+Use Git Flow for new features: create a `feature/<descriptive-name>` branch from `develop`, implement and validate the feature there, and merge it back into `develop` through a pull request. Do not develop features directly on `develop` or the release branch.
+
 Prefer existing `feat:`, `fix:`, `chore:`, and `ci:` prefixes with imperative summaries. Describe the problem, resulting behavior, loader validation, and relevant issue links; include screenshots for visual changes. Exclude generated builds, reports, caches, and local notes.
