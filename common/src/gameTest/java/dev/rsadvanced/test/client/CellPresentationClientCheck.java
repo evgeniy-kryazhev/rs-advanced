@@ -341,8 +341,10 @@ public final class CellPresentationClientCheck {
                     try (var pixels = net.minecraft.client.Screenshot.takeScreenshot(minecraft.getMainRenderTarget())) {
                         pixels.writeToFile(screenshot);
                         minecraft.execute(() -> {
-                            minecraft.setScreen(null);
-                            anchorInteractionTicks = 1;
+                            AnchorTooltipClientCheck.start(minecraft, () -> {
+                                minecraft.setScreen(null);
+                                anchorInteractionTicks = 1;
+                            });
                         });
                     } catch (Exception exception) {
                         finish(minecraft, exception);

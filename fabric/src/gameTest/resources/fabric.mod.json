@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "name": "RS Advanced Integration Tests",
   "environment": "*",
+  "mixins": ["rsadvanced-test.mixins.json"],
   "entrypoints": {
     "fabric-gametest": [
       "dev.rsadvanced.test.IntegrationGameTests"

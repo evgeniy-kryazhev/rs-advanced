@@ -31,6 +31,8 @@ On Linux/macOS, use `bash gradlew`. Use `--offline` only with cached dependencie
 
 Use four-space indentation, descriptive camelCase members, PascalCase classes, and UPPER_SNAKE_CASE constants. Resource IDs use `rsadvanced:snake_case`. Write explicit control flow and error handling; separate logical operations and comment non-obvious invariants. Match existing formatting; no formatter or linter is configured. Keep loader APIs out of `common` and client classes off dedicated servers.
 
+Format tooltips for addon machine blocks, including the Network Anchor, consistently with equivalent machine blocks in the main Refined Storage mod. Follow the pinned RS version's tooltip structure, text styles, colors, line wrapping, and description display behavior; inspect an equivalent RS tooltip before implementing or changing one.
+
 ## Testing Guidelines
 
 Use JUnit 5 (`*Test.java`) and Minecraft GameTest. No percentage coverage gate exists; test meaningful behavior and regressions on both loaders. GUI changes require actual server-driven menu opening, not just direct screen previews. Persistence changes require sequential `runAnchorRestartSeed`, `runAnchorRestartCheck`, `runAnchorRestartEmpty`, and `runAnchorRestartNorandom` scenarios per loader. Reports and screenshots belong in `build/reports`.

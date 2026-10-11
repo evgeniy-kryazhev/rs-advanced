@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "package": "dev.rsadvanced.test.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": ["TooltipShiftMixin"],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
