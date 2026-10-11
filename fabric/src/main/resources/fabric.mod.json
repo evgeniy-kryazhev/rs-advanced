@@ -7,7 +7,8 @@
   "license": "MIT",
   "environment": "*",
   "entrypoints": {
-    "main": ["dev.rsadvanced.fabric.RSAdvancedFabric"]
+    "main": ["dev.rsadvanced.fabric.RSAdvancedFabric"],
+    "modmenu": ["dev.rsadvanced.fabric.config.RSAdvancedModMenu"]
   },
   "mixins": ["rsadvanced.mixins.json"],
   "depends": {
@@ -16,6 +17,10 @@
     "architectury": ">=${architecturyApiVersion}",
     "minecraft": "${minecraftVersion}",
     "java": ">=21",
-    "refinedstorage": "${refinedStorageVersion}"
+    "refinedstorage": "${refinedStorageVersion}",
+    "cloth-config": ">=15.0.140"
+  },
+  "suggests": {
+    "modmenu": "*"
   }
 }

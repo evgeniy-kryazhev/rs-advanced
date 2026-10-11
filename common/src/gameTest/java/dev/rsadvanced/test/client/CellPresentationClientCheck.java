@@ -67,6 +67,7 @@ public final class CellPresentationClientCheck {
     private static boolean anchorInteractionSent;
     private static int anchorInteractionStage;
     private static boolean checkingAnchorDistance;
+    private static boolean checkingConfiguration;
 
     public static void register() {
         if (Boolean.getBoolean("rsadvanced.test.clientValidation")) {
@@ -75,6 +76,16 @@ public final class CellPresentationClientCheck {
     }
 
     private static void tick(Minecraft minecraft) {
+        if (checkingConfiguration) {
+            try {
+                if (ConfigurationClientCheck.tick(minecraft)) {
+                    finish(minecraft, null);
+                }
+            } catch (Exception | AssertionError failure) {
+                finish(minecraft, failure);
+            }
+            return;
+        }
         if (checkingAnchorDistance) {
             try {
                 if (AnchorDistanceClientCheck.tick(minecraft)) {
@@ -106,7 +117,8 @@ public final class CellPresentationClientCheck {
             if (anchorPreviewTicks >= 110 && (anchorPreviewTicks - 110) % 30 == 0) {
                 try {
                     if (AnchorVisualizationClientCheck.captureAndAdvance(minecraft)) {
-                        finish(minecraft, null);
+                        ConfigurationClientCheck.start(minecraft);
+                        checkingConfiguration = true;
                     }
                 } catch (Exception exception) {
                     finish(minecraft, exception);

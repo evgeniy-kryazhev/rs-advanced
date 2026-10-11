@@ -18,7 +18,10 @@ public final class IntegrationTestMod {
     public IntegrationTestMod(IEventBus modBus) {
         ClientValidationServer.register();
         dev.rsadvanced.test.AnchorRestartScenario.register();
-        EnvExecutor.runInEnv(Env.CLIENT, () -> CellPresentationClientCheck::register);
+        EnvExecutor.runInEnv(Env.CLIENT, () -> () -> {
+            dev.rsadvanced.test.client.ConfigurationClientCheck.register(new NeoForgeConfigurationClientCheck());
+            CellPresentationClientCheck.register();
+        });
         modBus.addListener(IntegrationTestMod::registerTests);
     }
 

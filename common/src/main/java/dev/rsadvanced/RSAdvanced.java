@@ -18,6 +18,7 @@ import dev.rsadvanced.network.InfiniteGridMenu;
 import dev.rsadvanced.network.InfiniteResourcesPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import java.util.function.Supplier;
 
 /** Shared Architectury bootstrap for every RS Advanced feature. */
 public final class RSAdvanced {
@@ -30,7 +31,7 @@ public final class RSAdvanced {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
     }
 
-    public static void initialize() {
+    public static void initialize(Supplier<RSAdvancedConfig> configLoader) {
         AdvancedComponents.register();
         AdvancedContent.register();
         AnchorContent.register();
@@ -44,7 +45,7 @@ public final class RSAdvanced {
         TickEvent.SERVER_LEVEL_POST.register(AnchorManager::afterLevelTick);
         TickEvent.SERVER_POST.register(AnchorNetworking::tick);
         LifecycleEvent.SERVER_BEFORE_START.register(server -> {
-            RSAdvancedConfig.load();
+            RSAdvancedConfig.load(configLoader);
             CellDefinitions.startSession(server.registryAccess());
         });
         LifecycleEvent.SERVER_STOPPED.register(server ->

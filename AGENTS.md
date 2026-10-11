@@ -37,7 +37,7 @@ Use JUnit 5 (`*Test.java`) and Minecraft GameTest. No percentage coverage gate e
 
 ## Architecture & Configuration
 
-Use the shared `config/rsadvanced.json` through `RSAdvancedConfig`; settings require restart. Keep world mutations server-side and enforce RS `OPEN`/`BUILD` permissions. Register NeoForge screens in `RegisterMenuScreensEvent` and Fabric screens during client setup. Preserve energy accounting and independent ticket ownership.
+Use `config/rsadvanced.toml` with AutoConfig/Cloth Config on Fabric and `config/rsadvanced-common.toml` with native `ModConfigSpec` on NeoForge. Both provide a validated, immutable `RSAdvancedConfig` snapshot at server startup; settings require restarting the server or reopening the world. JSON is not migrated. Keep world mutations server-side and enforce RS `OPEN`/`BUILD` permissions. Register NeoForge menu screens in `RegisterMenuScreensEvent` and Fabric menu screens during client setup. Configuration screens use Mod Menu on Fabric and `IConfigScreenFactory` on NeoForge. Preserve energy accounting and independent ticket ownership.
 
 ## Commit & Pull Request Guidelines
 

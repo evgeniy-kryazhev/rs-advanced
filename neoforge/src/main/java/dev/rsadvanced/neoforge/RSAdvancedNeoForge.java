@@ -9,6 +9,9 @@ import dev.architectury.utils.EnvExecutor;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.common.world.chunk.RegisterTicketControllersEvent;
 import dev.rsadvanced.RSAdvanced;
+import dev.rsadvanced.neoforge.config.NeoForgeConfig;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.config.ModConfig;
 import dev.rsadvanced.content.AdvancedContent;
 import dev.rsadvanced.feature.disk.CellDefinition;
 import dev.rsadvanced.feature.disk.CellDefinitions;
@@ -20,13 +23,15 @@ import net.neoforged.neoforge.registries.DataPackRegistryEvent;
 
 @Mod(RSAdvanced.MOD_ID)
 public final class RSAdvancedNeoForge {
-    public RSAdvancedNeoForge(IEventBus modBus) {
+    public RSAdvancedNeoForge(IEventBus modBus, ModContainer modContainer) {
+        var config = new NeoForgeConfig();
+        modContainer.registerConfig(ModConfig.Type.COMMON, config.spec());
         modBus.addListener(this::registerCellRegistry);
         modBus.addListener(this::appendCreativeCells);
         modBus.addListener(this::registerAnchorCapability);
         modBus.addListener(this::registerAnchorTickets);
-        RSAdvanced.initialize();
-        EnvExecutor.runInEnv(Env.CLIENT, () -> () -> RSAdvancedNeoForgeClient.initialize(modBus));
+        RSAdvanced.initialize(config::snapshot);
+        EnvExecutor.runInEnv(Env.CLIENT, () -> () -> RSAdvancedNeoForgeClient.initialize(modBus, modContainer));
     }
 
     private void appendCreativeCells(BuildCreativeModeTabContentsEvent event) {

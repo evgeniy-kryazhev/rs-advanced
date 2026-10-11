@@ -4,12 +4,14 @@ import dev.architectury.event.events.client.ClientLifecycleEvent;
 import dev.architectury.registry.menu.MenuRegistry;
 import dev.rsadvanced.client.AnchorScreen;
 import dev.rsadvanced.feature.anchor.AnchorContent;
+import dev.rsadvanced.fabric.config.FabricConfigScreen;
 
 final class RSAdvancedFabricClient {
     private RSAdvancedFabricClient() {
     }
 
     static void initialize() {
+        FabricConfigScreen.register();
         ClientLifecycleEvent.CLIENT_SETUP.register(minecraft ->
                 MenuRegistry.registerScreenFactory(AnchorContent.MENU.get(), AnchorScreen::new));
     }

@@ -1,6 +1,7 @@
 package dev.rsadvanced.config;
 
 import org.junit.jupiter.api.Test;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -10,37 +11,39 @@ class RSAdvancedConfigTest {
     void visualizationDistanceSupportsDefaultsAndExplicitBounds() {
         assertEquals(256, RSAdvancedConfig.DEFAULT.anchorVisualizationDistance());
         for (int distance : new int[] {1, 96, 4096}) {
-            String json = """
-                    {"baseCost":80,"chunkCostMultiplier":1,"maxChunks":256,"randomTicks":true,
-                     "anchorVisualizationDistance":%d}
-                    """.formatted(distance);
-            assertEquals(distance, RSAdvancedConfig.fromJson(json).anchorVisualizationDistance());
+            var config = new RSAdvancedConfig(80, 1, 256, true, distance);
+            assertEquals(distance, config.anchorVisualizationDistance());
         }
     }
 
     @Test
     void rejectsExplicitInvalidVisualizationDistance() {
-        for (String distance : new String[] {"0", "-1", "4097", "1.5", "2147483648", "null", "true", "\"256\""}) {
-            String json = """
-                    {"baseCost":80,"chunkCostMultiplier":1,"maxChunks":256,"randomTicks":true,
-                     "anchorVisualizationDistance":%s}
-                    """.formatted(distance);
-            assertThrows(RuntimeException.class, () -> RSAdvancedConfig.fromJson(json));
+        for (int distance : new int[] {0, -1, 4097, Integer.MAX_VALUE}) {
+            assertThrows(IllegalArgumentException.class, () -> new RSAdvancedConfig(80, 1, 256, true, distance));
         }
     }
-    @Test
-    void readsExistingConfigurationKeys() {
-        String json = """
-                {
-                  "baseCost": 10,
-                  "chunkCostMultiplier": 2,
-                  "maxChunks": 32,
-                  "randomTicks": false
-                }
-                """;
-        RSAdvancedConfig config = RSAdvancedConfig.fromJson(json);
 
-        assertEquals(new RSAdvancedConfig(10, 2, 32, false), config);
+    @Test
+    void appliesEditsOnlyWhenAnotherServerSessionLoads() {
+        var original = RSAdvancedConfig.get();
+        var edited = new RSAdvancedConfig(10, 2, 32, false, 96);
+        var platformConfig = new AtomicReference<>(RSAdvancedConfig.DEFAULT);
+        try {
+            RSAdvancedConfig.load(platformConfig::get);
+            platformConfig.set(edited);
+            assertEquals(RSAdvancedConfig.DEFAULT, RSAdvancedConfig.get());
+
+            RSAdvancedConfig.load(platformConfig::get);
+            assertEquals(edited, RSAdvancedConfig.get());
+
+            assertThrows(ArithmeticException.class, () -> RSAdvancedConfig.load(() ->
+                    new RSAdvancedConfig(80, Long.MAX_VALUE, 256, true)));
+            assertEquals(edited, RSAdvancedConfig.get());
+            assertThrows(NullPointerException.class, () -> RSAdvancedConfig.load(() -> null));
+            assertEquals(edited, RSAdvancedConfig.get());
+        } finally {
+            RSAdvancedConfig.load(() -> original);
+        }
     }
 
     @Test
@@ -55,7 +58,10 @@ class RSAdvancedConfigTest {
     @Test
     void rejectsInvalidAndOverflowingSettings() {
         assertThrows(IllegalArgumentException.class, () -> new RSAdvancedConfig(-1, 1, 256, true));
+        assertThrows(IllegalArgumentException.class, () -> new RSAdvancedConfig(80, -1, 256, true));
         assertThrows(IllegalArgumentException.class, () -> new RSAdvancedConfig(80, 1, 0, true));
+        assertThrows(IllegalArgumentException.class, () -> new RSAdvancedConfig(80, 1, 65537, true));
         assertThrows(ArithmeticException.class, () -> new RSAdvancedConfig(80, Long.MAX_VALUE, 256, true));
+        assertThrows(ArithmeticException.class, () -> new RSAdvancedConfig(Long.MAX_VALUE, 1, 1, true));
     }
 }

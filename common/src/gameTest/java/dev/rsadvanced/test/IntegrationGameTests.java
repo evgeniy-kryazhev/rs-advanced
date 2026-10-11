@@ -15,6 +15,7 @@ public final class IntegrationGameTests {
                     Integer.MAX_VALUE, 0, true, helper -> ClientValidationServer.completed = helper::succeed));
         }
         return List.of(
+                create("toml_configuration", ConfigurationIntegrationTest::defaultsAreGeneratedWithoutJsonMigration),
                 create("anchor_visualization_lifecycle", AnchorIntegrationTest::visualizationSelectionLifecycle),
                 create("anchor_visualization_packet", AnchorIntegrationTest::visualizationPacket),
                 create("anchor_container_counts", AnchorIntegrationTest::incrementalContainerCounts),

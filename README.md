@@ -27,8 +27,27 @@ Adjacent chunks form one area without internal walls or intermediate chunk divis
 The screen uses the vanilla Minecraft panel and buttons. Opening uses RS `OPEN` permission;
 changing enabled state uses `BUILD`.
 
-The shared mod configuration `config/rsadvanced.json` controls `baseCost` (80), `chunkCostMultiplier` (1), `maxChunks`
-(256), `randomTicks` (true), and `anchorVisualizationDistance` (256 blocks, integer 1–4096). Restart the server to apply changes. Random ticks follow
+Settings are stored in `config/rsadvanced.toml` on Fabric and `config/rsadvanced-common.toml` on NeoForge.
+Both use the same TOML structure:
+
+```toml
+[anchor]
+baseCost = 80
+chunkCostMultiplier = 1
+maxChunks = 256
+randomTicks = true
+visualizationDistance = 256
+```
+
+Energy costs must be nonnegative, `maxChunks` must be 1–65536, and `visualizationDistance` must be
+1–4096 blocks. The total energy cost at `maxChunks` must fit in a signed 64-bit integer.
+Open the configuration screen through **Mod Menu → RS Advanced** on Fabric or **Mods → RS Advanced → Config**
+on NeoForge. Fabric uses AutoConfig/Cloth Config; NeoForge uses its built-in configuration screen.
+Changes apply after restarting the server or reopening a single-player world. The screen edits the local
+installation's settings; a remote server uses its own TOML file. Existing `rsadvanced.json` files are ignored
+and are not migrated; a missing TOML file is created with defaults.
+
+Random ticks follow
 `randomTickSpeed`; the anchor does not create additional natural mob spawning. On restart,
 the last paid area is restored for at most 100 ticks while the RS graph initializes.
 
@@ -56,6 +75,8 @@ Install RS Advanced on both the client and server, together with:
 - **Refined Storage 2.0.9** and its required dependencies.
 - **Architectury API 13.0.11+**.
 - **Fabric API** for the Fabric version.
+- **Cloth Config 15.0.140+** for the Fabric version (bundled with Refined Storage 2.0.9).
+- Optional **Mod Menu** on Fabric to access the configuration screen.
 
 Use the release JAR matching your loader. Forge is not supported.
 

@@ -125,8 +125,7 @@ loom {
             String rsConfigurationFile = project.name == 'neoforge'
                     ? 'refinedstorage-common.toml' : 'refinedstorage.toml'
             new File(configurationDirectory, rsConfigurationFile).text = '[controller]\nenergyCapacity = 100000\n'
-            new File(configurationDirectory, 'rsadvanced.json').text = groovy.json.JsonOutput.prettyPrint(
-                    groovy.json.JsonOutput.toJson([baseCost: 80, chunkCostMultiplier: 1, maxChunks: 256, randomTicks: phase != 'norandom']))
+            writeAdvancedTestConfig(configurationDirectory, phase != 'norandom', 256)
             project.layout.buildDirectory.file("reports/anchorRestart/${phase}.txt").get().asFile.delete()
         }
         doLast {
@@ -147,6 +146,12 @@ tasks.named('runGameTest') {
     }
     doFirst {
         project.layout.buildDirectory.dir('reports/gameTest').get().asFile.mkdirs()
+        File configDirectory = project.layout.buildDirectory.dir('run/gameTest/config').get().asFile
+        configDirectory.mkdirs()
+        String filename = project.name == 'neoforge' ? 'rsadvanced-common.toml' : 'rsadvanced.toml'
+        // Exercise first-launch generation while an incompatible legacy file is present.
+        new File(configDirectory, filename).delete()
+        new File(configDirectory, 'rsadvanced.json').text = 'legacy config must be ignored\n'
     }
 }
 
@@ -163,9 +168,7 @@ tasks.named('check') {
             if (taskName == 'runServerValidation') {
                 File configDirectory = project.layout.buildDirectory.dir('run/serverValidation/config').get().asFile
                 configDirectory.mkdirs()
-                new File(configDirectory, 'rsadvanced.json').text = groovy.json.JsonOutput.toJson(
-                        [baseCost: 80, chunkCostMultiplier: 1, maxChunks: 256, randomTicks: true,
-                         anchorVisualizationDistance: 96])
+                writeAdvancedTestConfig(configDirectory, true, 96)
             }
             project.layout.buildDirectory.dir("reports/${directory}").get().asFile.mkdirs()
             copy {
@@ -180,10 +183,25 @@ tasks.named('check') {
     }
 }
 
+void writeAdvancedTestConfig(File configDirectory, boolean randomTicks, int visualizationDistance) {
+    String filename = project.name == 'neoforge' ? 'rsadvanced-common.toml' : 'rsadvanced.toml'
+    new File(configDirectory, filename).text = """\
+[anchor]
+baseCost = 80
+chunkCostMultiplier = 1
+maxChunks = 256
+randomTicks = ${randomTicks}
+visualizationDistance = ${visualizationDistance}
+"""
+}
+
 tasks.named('runClientValidation') {
     dependsOn tasks.named('gameTestClasses')
     doFirst {
         project.layout.buildDirectory.dir('reports/clientValidation').get().asFile.mkdirs()
+        File configDirectory = project.layout.buildDirectory.dir('run/clientValidation/config').get().asFile
+        configDirectory.mkdirs()
+        writeAdvancedTestConfig(configDirectory, true, 256)
         delete project.layout.buildDirectory.file('reports/clientValidation/results.txt')
         copy {
             from rootProject.file('common/src/gameTest/clientResources')

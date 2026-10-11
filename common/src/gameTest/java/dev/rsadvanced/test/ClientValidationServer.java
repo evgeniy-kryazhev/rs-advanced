@@ -42,7 +42,13 @@ public final class ClientValidationServer {
         PlayerEvent.PLAYER_JOIN.register(player -> player.getServer().execute(() -> {
             serverPlayerSetup(player);
             // Give the actual client a nearby block for the normal interaction/open-menu packet path.
-            player.serverLevel().setBlockAndUpdate(player.blockPosition().east(2),
+            var anchorPosition = player.blockPosition().east(2);
+            // A previous run leaves the distance-check cable line in this persistent test world.
+            // Remove it before measuring the initial area so adding the line grows the network again.
+            for (int offset = 0; offset <= 17; offset++) {
+                player.serverLevel().removeBlock(anchorPosition.east(offset), false);
+            }
+            player.serverLevel().setBlockAndUpdate(anchorPosition,
                     dev.rsadvanced.feature.anchor.AnchorContent.BLOCK.get().defaultBlockState());
         }));
         TickEvent.SERVER_PRE.register(server -> {

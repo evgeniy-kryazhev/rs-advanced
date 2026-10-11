@@ -7,6 +7,7 @@ import dev.architectury.utils.Env;
 import dev.architectury.utils.EnvExecutor;
 import dev.rsadvanced.feature.anchor.AnchorContent;
 import dev.rsadvanced.RSAdvanced;
+import dev.rsadvanced.fabric.config.FabricConfig;
 import dev.rsadvanced.content.AdvancedContent;
 import dev.rsadvanced.feature.disk.CellDefinition;
 import dev.rsadvanced.feature.disk.CellDefinitions;
@@ -22,7 +23,8 @@ public final class RSAdvancedFabric implements ModInitializer {
         DynamicRegistries.registerSynced(
                 CellDefinitions.REGISTRY_KEY,
                 CellDefinition.CODEC);
-        RSAdvanced.initialize();
+        FabricConfig.register();
+        RSAdvanced.initialize(FabricConfig::load);
         EnvExecutor.runInEnv(Env.CLIENT, () -> RSAdvancedFabricClient::initialize);
         LifecycleEvent.SETUP.register(() ->
                 RefinedStorageFabricApi.INSTANCE

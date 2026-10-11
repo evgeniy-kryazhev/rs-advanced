@@ -1,21 +1,14 @@
 package dev.rsadvanced.config;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.annotations.SerializedName;
-import dev.architectury.platform.Platform;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.Objects;
+import java.util.function.Supplier;
 
 /** Shared configuration for all features, loaded centrally once per server session. */
 public record RSAdvancedConfig(
-        @SerializedName("baseCost") long anchorBaseCost,
-        @SerializedName("chunkCostMultiplier") long anchorChunkCostMultiplier,
-        @SerializedName("maxChunks") int anchorMaxChunks,
-        @SerializedName("randomTicks") boolean anchorRandomTicks,
+        long anchorBaseCost,
+        long anchorChunkCostMultiplier,
+        int anchorMaxChunks,
+        boolean anchorRandomTicks,
         int anchorVisualizationDistance) {
     public static final RSAdvancedConfig DEFAULT = new RSAdvancedConfig(80, 1, 256, true, 256);
     private static volatile RSAdvancedConfig current = DEFAULT;
@@ -44,43 +37,9 @@ public record RSAdvancedConfig(
         return current;
     }
 
-    public static RSAdvancedConfig fromJson(String json) {
-        JsonObject settings = JsonParser.parseString(json).getAsJsonObject();
-        if (!settings.has("anchorVisualizationDistance")) {
-            // Older installations retain their existing settings and receive the new default.
-            settings.addProperty("anchorVisualizationDistance", DEFAULT.anchorVisualizationDistance());
-        } else {
-            var distance = settings.get("anchorVisualizationDistance");
-            try {
-                if (!distance.isJsonPrimitive() || !distance.getAsJsonPrimitive().isNumber()) {
-                    throw new IllegalArgumentException("Expected a number");
-                }
-                distance.getAsBigDecimal().intValueExact();
-            } catch (RuntimeException exception) {
-                throw new IllegalArgumentException("anchorVisualizationDistance must be an integer in 1..4096", exception);
-            }
-        }
-        return new Gson().fromJson(settings, RSAdvancedConfig.class);
-    }
-
-    public static void load() {
-        Path path = Platform.getConfigFolder().resolve("rsadvanced.json");
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        try {
-            if (!Files.exists(path)) {
-                Files.createDirectories(path.getParent());
-                Files.writeString(path, gson.toJson(DEFAULT) + System.lineSeparator());
-                current = DEFAULT;
-                return;
-            }
-            // Keep the existing JSON keys compatible while naming feature settings explicitly in Java.
-            RSAdvancedConfig config = fromJson(Files.readString(path));
-            if (config == null) {
-                throw new IllegalArgumentException("Empty RS Advanced configuration");
-            }
-            current = config;
-        } catch (IOException | RuntimeException exception) {
-            throw new IllegalStateException("Cannot load " + path, exception);
-        }
+    public static void load(Supplier<RSAdvancedConfig> loader) {
+        // Freeze all settings together for this server session. GUI edits must not change
+        // networking limits while an existing AnchorManager still uses the previous costs.
+        current = Objects.requireNonNull(loader.get(), "The platform configuration must not be null");
     }
 }
