@@ -11,6 +11,7 @@ import dev.rsadvanced.fabric.config.FabricConfig;
 import dev.rsadvanced.content.AdvancedContent;
 import dev.rsadvanced.feature.disk.CellDefinition;
 import dev.rsadvanced.feature.disk.CellDefinitions;
+import dev.rsadvanced.feature.disk.InfiniteStorageBlockContent;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
@@ -31,6 +32,10 @@ public final class RSAdvancedFabric implements ModInitializer {
                         .getNetworkNodeContainerProviderLookup().registerForBlockEntity(
                                 (anchor, side) -> anchor.getContainerProvider(),
                                 AnchorContent.ENTITY.get()));
+        LifecycleEvent.SETUP.register(() -> RefinedStorageFabricApi.INSTANCE
+                .getNetworkNodeContainerProviderLookup().registerForBlockEntity(
+                        (storageBlock, side) -> storageBlock.getContainerProvider(),
+                        InfiniteStorageBlockContent.ENTITY.get()));
         ItemGroupEvents.MODIFY_ENTRIES_ALL.register((tab, entries) -> {
             // RS may initialize after this entrypoint; resolve its API only when tabs are built.
             var tabId = BuiltInRegistries.CREATIVE_MODE_TAB.getKey(tab);
@@ -41,6 +46,9 @@ public final class RSAdvancedFabric implements ModInitializer {
             entries.accept(AnchorContent.ITEM.get());
             for (var cell : AdvancedContent.creativeCells(entries.getContext().holders())) {
                 entries.accept(cell, CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
+            }
+            for (var storageBlock : InfiniteStorageBlockContent.creativeBlocks(entries.getContext().holders())) {
+                entries.accept(storageBlock, CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
             }
         });
     }

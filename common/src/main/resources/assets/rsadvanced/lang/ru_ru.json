@@ -1,4 +1,9 @@
 {
+  "block.rsadvanced.infinite_item_storage_block": "Блок бесконечного хранения предметов",
+  "block.rsadvanced.infinite_fluid_storage_block": "Блок бесконечного хранения жидкостей",
+  "block.rsadvanced.infinite_storage_block": "Блок бесконечного хранения (%s)",
+  "block.rsadvanced.unknown_infinite_storage_block": "Неизвестный блок бесконечного хранения",
+  "block.rsadvanced.infinite_storage_block.help": "Подключите к сети Refined Storage для бесконечной подачи указанного ресурса. Принимает этот же ресурс обратно без накопления.",
   "rsadvanced.configuration.title": "Настройки RS Advanced",
   "rsadvanced.configuration.anchor.button": "Настроить якорь",
   "text.autoconfig.rsadvanced.title": "Настройки RS Advanced",

@@ -15,6 +15,7 @@ import net.neoforged.fml.config.ModConfig;
 import dev.rsadvanced.content.AdvancedContent;
 import dev.rsadvanced.feature.disk.CellDefinition;
 import dev.rsadvanced.feature.disk.CellDefinitions;
+import dev.rsadvanced.feature.disk.InfiniteStorageBlockContent;
 import net.minecraft.world.item.CreativeModeTab;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -43,6 +44,9 @@ public final class RSAdvancedNeoForge {
         for (var cell : AdvancedContent.creativeCells(event.getParameters().holders())) {
             event.accept(cell, CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
         }
+        for (var storageBlock : InfiniteStorageBlockContent.creativeBlocks(event.getParameters().holders())) {
+            event.accept(storageBlock, CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
+        }
     }
 
     private void registerCellRegistry(DataPackRegistryEvent.NewRegistry event) {
@@ -56,6 +60,10 @@ public final class RSAdvancedNeoForge {
                         .getNetworkNodeContainerProviderCapability(),
                 AnchorContent.ENTITY.get(),
                 (anchor, side) -> anchor.getContainerProvider());
+        event.registerBlockEntity(RefinedStorageNeoForgeApi.INSTANCE
+                        .getNetworkNodeContainerProviderCapability(),
+                InfiniteStorageBlockContent.ENTITY.get(),
+                (storageBlock, side) -> storageBlock.getContainerProvider());
     }
 
     private void registerAnchorTickets(RegisterTicketControllersEvent event) {

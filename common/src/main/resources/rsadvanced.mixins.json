@@ -10,7 +10,8 @@
     "ConfiguredStorageMixin",
     "RootStorageMixin",
     "GridContainerMenuMixin",
-    "DiskDriveContainerMenuMixin"
+    "DiskDriveContainerMenuMixin",
+    "StorageBlockContainerMenuMixin"
   ],
   "client": [
     "client.AnchorVisualizationMixin",

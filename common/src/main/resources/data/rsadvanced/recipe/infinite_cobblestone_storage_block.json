@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CPE",
+    "EME",
+    "ERE"
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:cobblestone"
+    },
+    "P": {
+      "item": "rsadvanced:infinite_storage_part"
+    },
+    "E": {
+      "item": "refinedstorage:quartz_enriched_iron"
+    },
+    "M": {
+      "item": "refinedstorage:machine_casing"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "id": "rsadvanced:infinite_item_storage_block",
+    "count": 1,
+    "components": {
+      "rsadvanced:cell_definition": "rsadvanced:cobblestone"
+    }
+  }
+}

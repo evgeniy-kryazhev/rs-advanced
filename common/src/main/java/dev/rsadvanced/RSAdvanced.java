@@ -13,8 +13,9 @@ import dev.rsadvanced.feature.anchor.AnchorManager;
 import dev.rsadvanced.feature.anchor.AnchorNetworkComponent;
 import dev.rsadvanced.feature.anchor.AnchorNetworking;
 import dev.rsadvanced.feature.disk.CellDefinitions;
+import dev.rsadvanced.feature.disk.InfiniteStorageBlockContent;
 import dev.rsadvanced.network.AdvancedNetworking;
-import dev.rsadvanced.network.InfiniteGridMenu;
+import dev.rsadvanced.network.InfiniteResourceMenu;
 import dev.rsadvanced.network.InfiniteResourcesPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -34,6 +35,7 @@ public final class RSAdvanced {
     public static void initialize(Supplier<RSAdvancedConfig> configLoader) {
         AdvancedComponents.register();
         AdvancedContent.register();
+        InfiniteStorageBlockContent.register();
         AnchorContent.register();
         LifecycleEvent.SERVER_STARTED.register(AnchorManager::start);
         LifecycleEvent.SERVER_STOPPING.register(server -> {
@@ -58,7 +60,7 @@ public final class RSAdvanced {
         });
         TickEvent.SERVER_POST.register(server -> {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                if (player.containerMenu instanceof InfiniteGridMenu menu) {
+                if (player.containerMenu instanceof InfiniteResourceMenu menu) {
                     menu.rsadvanced$synchronize(player);
                 }
             }

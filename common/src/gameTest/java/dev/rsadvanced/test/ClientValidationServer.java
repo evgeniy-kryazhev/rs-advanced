@@ -50,6 +50,21 @@ public final class ClientValidationServer {
             }
             player.serverLevel().setBlockAndUpdate(anchorPosition,
                     dev.rsadvanced.feature.anchor.AnchorContent.BLOCK.get().defaultBlockState());
+            var storagePosition = player.blockPosition().west(2);
+            player.serverLevel().setBlockAndUpdate(storagePosition.below(),
+                    Blocks.INSTANCE.getController().get(DyeColor.LIGHT_BLUE).defaultBlockState());
+            var storageController = (ControllerBlockEntity) player.serverLevel().getBlockEntity(storagePosition.below());
+            storageController.getEnergyStorage().receive(Long.MAX_VALUE, Action.EXECUTE);
+            player.serverLevel().setBlockAndUpdate(storagePosition,
+                    dev.rsadvanced.feature.disk.InfiniteStorageBlockContent.ITEM_BLOCK.get().defaultBlockState());
+            var itemBlock = (dev.rsadvanced.feature.disk.InfiniteStorageBlockEntity)
+                    player.serverLevel().getBlockEntity(storagePosition);
+            itemBlock.setDefinition(dev.rsadvanced.RSAdvanced.id("cobblestone"));
+            player.serverLevel().setBlockAndUpdate(storagePosition.west(),
+                    dev.rsadvanced.feature.disk.InfiniteStorageBlockContent.FLUID_BLOCK.get().defaultBlockState());
+            var fluidBlock = (dev.rsadvanced.feature.disk.InfiniteStorageBlockEntity)
+                    player.serverLevel().getBlockEntity(storagePosition.west());
+            fluidBlock.setDefinition(dev.rsadvanced.RSAdvanced.id("water"));
         }));
         TickEvent.SERVER_PRE.register(server -> {
             for (var player : server.getPlayerList().getPlayers()) {

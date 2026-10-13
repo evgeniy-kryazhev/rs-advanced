@@ -1,4 +1,9 @@
 {
+  "block.rsadvanced.infinite_item_storage_block": "Infinite Item Storage Block",
+  "block.rsadvanced.infinite_fluid_storage_block": "Infinite Fluid Storage Block",
+  "block.rsadvanced.infinite_storage_block": "Infinite Storage Block (%s)",
+  "block.rsadvanced.unknown_infinite_storage_block": "Unknown Infinite Storage Block",
+  "block.rsadvanced.infinite_storage_block.help": "Connect to a Refined Storage network to provide an infinite supply of the specified resource. Accepts the same resource back without accumulating it.",
   "rsadvanced.configuration.title": "RS Advanced Settings",
   "rsadvanced.configuration.anchor.button": "Edit anchor settings",
   "text.autoconfig.rsadvanced.title": "RS Advanced Settings",
