@@ -13,7 +13,6 @@ This Architectury addon targets Java 21, Minecraft 1.21.1, and Refined Storage 2
 - `common/src/main/resources`: models, textures, translations, recipes, and cell definitions.
 - `common/src/test`: JUnit tests; `common/src/gameTest`: development-only integration tests and fixtures.
 - `examples/lava-datapack`: external datapack example used by tests; `assets`: README artwork.
-- `docs/obsidian`: ignored local notes. Keep other contributor rules in this file.
 
 ## Build, Test, and Development Commands
 
