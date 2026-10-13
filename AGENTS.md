@@ -38,6 +38,8 @@ Use JUnit 5 (`*Test.java`) and Minecraft GameTest. No percentage coverage gate e
 
 ## Architecture & Configuration
 
+When adding a new storage cell, add both its storage part and its storage block, following the equivalent cells and blocks in the pinned Refined Storage version. A new storage cell must include both forms.
+
 Use `config/rsadvanced.toml` with AutoConfig/Cloth Config on Fabric and `config/rsadvanced-common.toml` with native `ModConfigSpec` on NeoForge. Both provide a validated, immutable `RSAdvancedConfig` snapshot at server startup; settings require restarting the server or reopening the world. JSON is not migrated. Keep world mutations server-side and enforce RS `OPEN`/`BUILD` permissions. Register NeoForge menu screens in `RegisterMenuScreensEvent` and Fabric menu screens during client setup. Configuration screens use Mod Menu on Fabric and `IConfigScreenFactory` on NeoForge. Preserve energy accounting and independent ticket ownership.
 
 ## Commit & Pull Request Guidelines
