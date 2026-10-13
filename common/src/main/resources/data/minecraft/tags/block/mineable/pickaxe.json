@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "rsadvanced:infinite_item_storage_block",
+    "rsadvanced:infinite_fluid_storage_block"
+  ]
+}

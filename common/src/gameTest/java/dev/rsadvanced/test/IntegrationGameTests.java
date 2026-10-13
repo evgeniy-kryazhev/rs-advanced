@@ -15,6 +15,10 @@ public final class IntegrationGameTests {
                     Integer.MAX_VALUE, 0, true, helper -> ClientValidationServer.completed = helper::succeed));
         }
         return List.of(
+                create("infinite_storage_blocks", InfiniteStorageBlockTest::placementDropsReloadAndRecipes),
+                create("infinite_storage_block_permissions", InfiniteStorageBlockTest::menuRequiresBuildPermission),
+                new TestFunction("rsadvanced", "rsadvanced.infinite_storage_block_network", "rsadvanced_test:empty",
+                        100, 0, true, InfiniteStorageBlockTest::networkConnectionAndRemoval),
                 create("toml_configuration", ConfigurationIntegrationTest::defaultsAreGeneratedWithoutJsonMigration),
                 create("anchor_visualization_lifecycle", AnchorIntegrationTest::visualizationSelectionLifecycle),
                 create("anchor_visualization_packet", AnchorIntegrationTest::visualizationPacket),

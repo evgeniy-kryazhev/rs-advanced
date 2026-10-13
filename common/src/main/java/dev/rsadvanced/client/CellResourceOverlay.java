@@ -3,6 +3,9 @@ package dev.rsadvanced.client;
 import com.refinedmods.refinedstorage.common.api.RefinedStorageClientApi;
 import com.refinedmods.refinedstorage.common.support.resource.ItemResource;
 import dev.rsadvanced.feature.disk.InfiniteDiskItem;
+import dev.rsadvanced.feature.disk.InfiniteStorageBlockItem;
+import dev.rsadvanced.feature.disk.CellDefinition;
+import java.util.Optional;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
 
@@ -13,10 +16,17 @@ public final class CellResourceOverlay {
     }
 
     public static void render(GuiGraphics graphics, ItemStack stack, int x, int y) {
-        if (renderingResource || !(stack.getItem() instanceof InfiniteDiskItem disk)) {
+        if (renderingResource) {
             return;
         }
-        var definition = disk.displayDefinition(stack);
+        Optional<CellDefinition> definition;
+        if (stack.getItem() instanceof InfiniteDiskItem disk) {
+            definition = disk.displayDefinition(stack);
+        } else if (stack.getItem() instanceof InfiniteStorageBlockItem storageBlock) {
+            definition = storageBlock.displayDefinition(stack);
+        } else {
+            return;
+        }
         if (definition.isEmpty()) {
             return;
         }

@@ -8,6 +8,9 @@ import dev.rsadvanced.feature.anchor.AnchorBlockEntity;
 import dev.rsadvanced.feature.anchor.AnchorContent;
 import dev.rsadvanced.feature.anchor.AnchorSavedData;
 import dev.rsadvanced.feature.anchor.AnchorStatus;
+import dev.rsadvanced.RSAdvanced;
+import dev.rsadvanced.feature.disk.InfiniteStorageBlockContent;
+import dev.rsadvanced.feature.disk.InfiniteStorageBlockEntity;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import net.minecraft.core.BlockPos;
@@ -19,6 +22,8 @@ public final class AnchorRestartScenario {
     private static final BlockPos ANCHOR = CONTROLLER.above();
     private static final BlockPos OUTPUT = ANCHOR.east(3).above();
     private static final BlockPos INPUT = ANCHOR.east(3).below();
+    private static final BlockPos ITEM_STORAGE = CONTROLLER.west();
+    private static final BlockPos FLUID_STORAGE = CONTROLLER.north();
     private static int ticks;
     private static boolean completed;
     private static long furnacesBefore;
@@ -42,12 +47,21 @@ public final class AnchorRestartScenario {
                     if (ticks == 5) {
                         level.setChunkForced(CONTROLLER.getX() >> 4, CONTROLLER.getZ() >> 4, true);
                         for (BlockPos position : java.util.List.of(CONTROLLER, ANCHOR, ANCHOR.above(), ANCHOR.east(),
-                                ANCHOR.east(2), ANCHOR.east(2).above(), ANCHOR.east(2).below(), ANCHOR.above(2), INPUT, OUTPUT)) {
+                                ANCHOR.east(2), ANCHOR.east(2).above(), ANCHOR.east(2).below(), ANCHOR.above(2), INPUT, OUTPUT,
+                                ITEM_STORAGE, FLUID_STORAGE)) {
                             level.removeBlock(position, false);
                         }
                         level.setBlockAndUpdate(CONTROLLER,
                                 Blocks.INSTANCE.getController().get(DyeColor.LIGHT_BLUE).defaultBlockState());
                         level.setBlockAndUpdate(ANCHOR, AnchorContent.BLOCK.get().defaultBlockState());
+                        level.setBlockAndUpdate(ITEM_STORAGE, InfiniteStorageBlockContent.ITEM_BLOCK.get().defaultBlockState());
+                        var itemStorage = (InfiniteStorageBlockEntity) level.getBlockEntity(ITEM_STORAGE);
+                        itemStorage.setDefinition(RSAdvanced.id("cobblestone"));
+                        itemStorage.node().getStorageConfiguration().setExtractPriority(27);
+                        level.setBlockAndUpdate(FLUID_STORAGE, InfiniteStorageBlockContent.FLUID_BLOCK.get().defaultBlockState());
+                        var fluidStorage = (InfiniteStorageBlockEntity) level.getBlockEntity(FLUID_STORAGE);
+                        fluidStorage.setDefinition(RSAdvanced.id("water"));
+                        fluidStorage.node().getStorageConfiguration().setExtractPriority(27);
                         level.setBlockAndUpdate(ANCHOR.east(),
                                 Blocks.INSTANCE.getCable().get(DyeColor.LIGHT_BLUE).defaultBlockState());
                         level.setBlockAndUpdate(ANCHOR.east(2),
@@ -106,6 +120,7 @@ public final class AnchorRestartScenario {
                         TestAssertions.assertEquals(2, anchor.areaSize());
                         TestAssertions.assertEquals(1, AnchorSavedData.get(server).snapshots().size());
                         assertAutomation(level);
+                        assertStorageBlocks(level);
                         AnchorAutocraftingCheck
                                 .verify(level, ANCHOR.above(2), furnacesBefore);
                         TestAssertions.assertEquals(phase.equals("norandom") ? 0 : 1,
@@ -141,6 +156,7 @@ public final class AnchorRestartScenario {
                     }
                     if (ticks == 330) {
                         assertAutomation(level);
+                        assertStorageBlocks(level);
                         AnchorAutocraftingCheck
                                 .verify(level, ANCHOR.above(2), furnacesBefore);
                         ControllerBlockEntity controller = (ControllerBlockEntity) level.getBlockEntity(CONTROLLER);
@@ -174,6 +190,18 @@ public final class AnchorRestartScenario {
         var output = (net.minecraft.world.level.block.entity.ChestBlockEntity) level.getBlockEntity(OUTPUT);
         output.clearContent();
         input.setItem(0, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.COBBLESTONE, 8));
+    }
+
+    private static void assertStorageBlocks(net.minecraft.server.level.ServerLevel level) {
+        for (BlockPos position : java.util.List.of(ITEM_STORAGE, FLUID_STORAGE)) {
+            var storageBlock = (InfiniteStorageBlockEntity) level.getBlockEntity(position);
+            String resourceName = position.equals(ITEM_STORAGE) ? "cobblestone" : "water";
+            TestAssertions.assertEquals(RSAdvanced.id(resourceName), storageBlock.definitionId());
+            TestAssertions.assertEquals(27, storageBlock.node().getStorageConfiguration().getExtractPriority());
+            var resource = TestCell.named("rsadvanced:" + resourceName).resource();
+            TestAssertions.assertEquals(64, storageBlock.resolve(0).orElseThrow()
+                    .extract(resource, 64, Action.EXECUTE, com.refinedmods.refinedstorage.api.storage.Actor.EMPTY));
+        }
     }
 
     private static void assertAutomation(net.minecraft.server.level.ServerLevel level) {

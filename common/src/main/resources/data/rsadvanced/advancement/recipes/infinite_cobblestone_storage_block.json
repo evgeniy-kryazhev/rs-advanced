@@ -1,0 +1,32 @@
+{
+  "requirements": [
+    [
+      "has_part",
+      "has_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "rsadvanced:infinite_cobblestone_storage_block"
+    ]
+  },
+  "criteria": {
+    "has_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "rsadvanced:infinite_cobblestone_storage_block"
+      }
+    },
+    "has_part": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "rsadvanced:infinite_storage_part"
+          }
+        ]
+      }
+    }
+  },
+  "parent": "minecraft:recipes/root"
+}
