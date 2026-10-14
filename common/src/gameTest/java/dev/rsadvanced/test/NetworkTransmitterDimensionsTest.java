@@ -59,6 +59,7 @@ public final class NetworkTransmitterDimensionsTest {
         private boolean sourceForced;
         private boolean receiverForced;
         private boolean finished;
+        private int connectedTick = -1;
 
         private Scenario(GameTestHelper helper) {
             this.helper = helper;
@@ -91,7 +92,12 @@ public final class NetworkTransmitterDimensionsTest {
                 controller = (ControllerBlockEntity) sourceLevel.getBlockEntity(ORIGIN);
                 bindTransmitter();
                 refillPower();
-                schedule(1, () -> awaitConnection(1));
+                // Register the complete schedule before ticking. Growing Minecraft's callback map
+                // while it is being iterated can crash the GameTest server on either loader.
+                for (int tick = 1; tick <= 700; tick++) {
+                    int checkpoint = tick;
+                    schedule(checkpoint, () -> checkCheckpoint(checkpoint));
+                }
             } catch (RuntimeException | AssertionError failure) {
                 cleanup();
                 throw failure;
@@ -113,25 +119,29 @@ public final class NetworkTransmitterDimensionsTest {
                 // RS retries unreachable receivers on wall-clock time. Pace only bootstrap at normal TPS,
                 // without replacing its rate limiter or manually updating network nodes.
                 LockSupport.parkNanos(50_000_000L);
-                schedule(tick + 1, () -> awaitConnection(tick + 1));
                 return;
             }
             releaseBootstrapTickets();
+            connectedTick = tick;
+        }
+
+        private void checkCheckpoint(int tick) {
+            if (connectedTick < 0) {
+                awaitConnection(tick);
+                return;
+            }
             // The default RS controller holds only 1000 FE. Supply every tick so the two anchors
             // and transmitter cannot exhaust it between checkpoints and invalidate the loading test.
-            for (int checkpoint = tick + 1; checkpoint <= tick + 410; checkpoint++) {
-                schedule(checkpoint, () -> {
-                    checkConnectedAndHeld();
-                    refillPower();
-                });
-            }
-            schedule(tick + 411, () -> {
+            if (tick <= connectedTick + 410) {
+                checkConnectedAndHeld();
+                refillPower();
+            } else {
                 checkConnectedAndHeld();
                 verifyFurnace(sourceLevel);
                 verifyFurnace(receiverLevel);
                 cleanup();
                 helper.succeed();
-            });
+            }
         }
 
         private void bindTransmitter() {
