@@ -1,4 +1,10 @@
 {
+  "item.rsadvanced.network_terminal": "Network Terminal",
+  "item.rsadvanced.network_terminal.help": "Access a loaded Network Receiver from any dimension using a normal Network Card. Right-click to open the grid. Shift + right-click to install or remove the card.",
+  "item.rsadvanced.network_terminal.no_card": "No Network Card installed",
+  "item.rsadvanced.network_terminal.unavailable": "Cannot connect. Check the card, receiver, network power, terminal charge and access permissions.",
+  "gui.rsadvanced.terminal_card": "Terminal Card",
+  "gui.rsadvanced.terminal_card.slot": "Network Card",
   "block.rsadvanced.infinite_item_storage_block": "Infinite Item Storage Block",
   "block.rsadvanced.infinite_fluid_storage_block": "Infinite Fluid Storage Block",
   "block.rsadvanced.infinite_storage_block": "Infinite Storage Block (%s)",

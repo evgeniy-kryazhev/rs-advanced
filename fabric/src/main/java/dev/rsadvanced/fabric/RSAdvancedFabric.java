@@ -2,6 +2,7 @@ package dev.rsadvanced.fabric;
 
 import com.refinedmods.refinedstorage.common.api.RefinedStorageApi;
 import com.refinedmods.refinedstorage.fabric.api.RefinedStorageFabricApi;
+import com.refinedmods.refinedstorage.fabric.api.RefinedStoragePlugin;
 import dev.architectury.event.events.common.LifecycleEvent;
 import dev.architectury.utils.Env;
 import dev.architectury.utils.EnvExecutor;
@@ -12,13 +13,25 @@ import dev.rsadvanced.content.AdvancedContent;
 import dev.rsadvanced.feature.disk.CellDefinition;
 import dev.rsadvanced.feature.disk.CellDefinitions;
 import dev.rsadvanced.feature.disk.InfiniteStorageBlockContent;
+import dev.rsadvanced.feature.terminal.TerminalContent;
+import com.refinedmods.refinedstorage.fabric.support.energy.EnergyStorageAdapter;
+import team.reborn.energy.api.EnergyStorage;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.CreativeModeTab;
 
-public final class RSAdvancedFabric implements ModInitializer {
+public final class RSAdvancedFabric implements ModInitializer, RefinedStoragePlugin {
+    @Override
+    public void onApiAvailable(RefinedStorageApi api) {
+        // WirelessGridItem obtains its helpers in the constructor, after RS has initialized its public API.
+        TerminalContent.register();
+        EnergyStorage.ITEM.registerForItems(
+                (stack, context) -> new EnergyStorageAdapter(TerminalContent.ITEM.get().createEnergyStorage(stack), context),
+                TerminalContent.ITEM.get());
+    }
+
     @Override
     public void onInitialize() {
         DynamicRegistries.registerSynced(
@@ -44,6 +57,7 @@ public final class RSAdvancedFabric implements ModInitializer {
             }
             entries.accept(AdvancedContent.INFINITE_STORAGE_PART.get());
             entries.accept(AnchorContent.ITEM.get());
+            entries.accept(TerminalContent.ITEM.get().createAtEnergyCapacity());
             for (var cell : AdvancedContent.creativeCells(entries.getContext().holders())) {
                 entries.accept(cell, CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
             }

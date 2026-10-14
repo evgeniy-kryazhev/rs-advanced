@@ -86,6 +86,7 @@ public final class AnchorRestartScenario {
                         level.setBlockAndUpdate(INPUT, net.minecraft.world.level.block.Blocks.CHEST.defaultBlockState());
                         var input = (net.minecraft.world.level.block.entity.ChestBlockEntity) level.getBlockEntity(INPUT);
                         input.setItem(0, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.COBBLESTONE, 8));
+                        TerminalRestartCheck.seed(level, CONTROLLER.south());
                     }
                     if (ticks == 30) {
                         level.setChunkForced(CONTROLLER.getX() >> 4, CONTROLLER.getZ() >> 4, false);
@@ -193,6 +194,7 @@ public final class AnchorRestartScenario {
     }
 
     private static void assertStorageBlocks(net.minecraft.server.level.ServerLevel level) {
+        TerminalRestartCheck.verify(level, CONTROLLER.south());
         for (BlockPos position : java.util.List.of(ITEM_STORAGE, FLUID_STORAGE)) {
             var storageBlock = (InfiniteStorageBlockEntity) level.getBlockEntity(position);
             String resourceName = position.equals(ITEM_STORAGE) ? "cobblestone" : "water";

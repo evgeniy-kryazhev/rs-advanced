@@ -20,7 +20,7 @@ import net.minecraft.world.level.GameType;
 
 /** The GameTest server exposes a loopback listener only for opt-in client checks. */
 public final class ClientValidationServer {
-    private static final Map<UUID, BlockPos> CONTROLLERS = new HashMap<>();
+    private static final Map<UUID, java.util.List<BlockPos>> CONTROLLERS = new HashMap<>();
     public static Runnable completed = () -> { };
 
     public static void register() {
@@ -55,6 +55,7 @@ public final class ClientValidationServer {
                     Blocks.INSTANCE.getController().get(DyeColor.LIGHT_BLUE).defaultBlockState());
             var storageController = (ControllerBlockEntity) player.serverLevel().getBlockEntity(storagePosition.below());
             storageController.getEnergyStorage().receive(Long.MAX_VALUE, Action.EXECUTE);
+            CONTROLLERS.get(player.getUUID()).add(storagePosition.below());
             player.serverLevel().setBlockAndUpdate(storagePosition,
                     dev.rsadvanced.feature.disk.InfiniteStorageBlockContent.ITEM_BLOCK.get().defaultBlockState());
             var itemBlock = (dev.rsadvanced.feature.disk.InfiniteStorageBlockEntity)
@@ -65,18 +66,28 @@ public final class ClientValidationServer {
             var fluidBlock = (dev.rsadvanced.feature.disk.InfiniteStorageBlockEntity)
                     player.serverLevel().getBlockEntity(storagePosition.west());
             fluidBlock.setDefinition(dev.rsadvanced.RSAdvanced.id("water"));
+            var receiverPosition = storagePosition.above();
+            player.serverLevel().setBlockAndUpdate(receiverPosition,
+                    Blocks.INSTANCE.getNetworkReceiver().get(DyeColor.LIGHT_BLUE).defaultBlockState());
+            player.getInventory().setItem(7, dev.rsadvanced.feature.terminal.TerminalContent.ITEM.get().createAtEnergyCapacity());
+            var card = new net.minecraft.world.item.ItemStack(
+                    com.refinedmods.refinedstorage.common.content.Items.INSTANCE.getNetworkCard());
+            card.set(com.refinedmods.refinedstorage.common.content.DataComponents.INSTANCE.getNetworkLocation(),
+                    net.minecraft.core.GlobalPos.of(player.level().dimension(), receiverPosition));
+            player.getInventory().setItem(8, card);
         }));
         TickEvent.SERVER_PRE.register(server -> {
             for (var player : server.getPlayerList().getPlayers()) {
-                // Keep the test controller powered throughout the distance checks.
-                BlockPos position = CONTROLLERS.get(player.getUUID());
-                if (position == null) {
+                // Both fixtures need continuous power; the terminal tests use the storage network.
+                var positions = CONTROLLERS.get(player.getUUID());
+                if (positions == null) {
                     continue;
                 }
-                var controller = player.serverLevel().getBlockEntity(position);
-                if (controller instanceof ControllerBlockEntity block) {
-                    block.getEnergyStorage().receive(Long.MAX_VALUE,
-                            Action.EXECUTE);
+                for (BlockPos position : positions) {
+                    var controller = player.serverLevel().getBlockEntity(position);
+                    if (controller instanceof ControllerBlockEntity block) {
+                        block.getEnergyStorage().receive(Long.MAX_VALUE, Action.EXECUTE);
+                    }
                 }
             }
         });
@@ -88,7 +99,7 @@ public final class ClientValidationServer {
         player.getServer().getCommands().sendCommands(player);
         player.setGameMode(GameType.CREATIVE);
         var position = player.blockPosition().east(2).below();
-        CONTROLLERS.put(player.getUUID(), position);
+        CONTROLLERS.put(player.getUUID(), new java.util.ArrayList<>(java.util.List.of(position)));
         player.serverLevel().setBlockAndUpdate(position,
                 Blocks.INSTANCE.getController()
                         .get(DyeColor.LIGHT_BLUE).defaultBlockState());
