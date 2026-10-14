@@ -14,6 +14,7 @@ import dev.rsadvanced.feature.disk.CellDefinition;
 import dev.rsadvanced.feature.disk.CellDefinitions;
 import dev.rsadvanced.feature.disk.InfiniteStorageBlockContent;
 import dev.rsadvanced.feature.terminal.TerminalContent;
+import dev.rsadvanced.feature.mining.MiningContent;
 import com.refinedmods.refinedstorage.fabric.support.energy.EnergyStorageAdapter;
 import team.reborn.energy.api.EnergyStorage;
 import net.fabricmc.api.ModInitializer;
@@ -27,9 +28,13 @@ public final class RSAdvancedFabric implements ModInitializer, RefinedStoragePlu
     public void onApiAvailable(RefinedStorageApi api) {
         // WirelessGridItem obtains its helpers in the constructor, after RS has initialized its public API.
         TerminalContent.register();
+        MiningContent.register();
         EnergyStorage.ITEM.registerForItems(
                 (stack, context) -> new EnergyStorageAdapter(TerminalContent.ITEM.get().createEnergyStorage(stack), context),
                 TerminalContent.ITEM.get());
+        EnergyStorage.ITEM.registerForItems(
+                (stack, context) -> new EnergyStorageAdapter(MiningContent.ITEM.get().createEnergyStorage(stack), context),
+                MiningContent.ITEM.get());
     }
 
     @Override
@@ -58,6 +63,7 @@ public final class RSAdvancedFabric implements ModInitializer, RefinedStoragePlu
             entries.accept(AdvancedContent.INFINITE_STORAGE_PART.get());
             entries.accept(AnchorContent.ITEM.get());
             entries.accept(TerminalContent.ITEM.get().createAtEnergyCapacity());
+            entries.accept(MiningContent.ITEM.get().createAtEnergyCapacity());
             for (var cell : AdvancedContent.creativeCells(entries.getContext().holders())) {
                 entries.accept(cell, CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
             }

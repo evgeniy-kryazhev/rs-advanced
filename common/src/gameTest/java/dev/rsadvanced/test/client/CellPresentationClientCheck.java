@@ -70,6 +70,7 @@ public final class CellPresentationClientCheck {
     private static boolean checkingConfiguration;
     private static boolean checkingStorageBlocks;
     private static boolean checkingTerminal;
+    private static boolean checkingMining;
 
     public static void register() {
         if (Boolean.getBoolean("rsadvanced.test.clientValidation")) {
@@ -78,11 +79,23 @@ public final class CellPresentationClientCheck {
     }
 
     private static void tick(Minecraft minecraft) {
+        if (checkingMining) {
+            try {
+                if (MiningClientCheck.tick(minecraft)) {
+                    checkingMining = false;
+                    showOverlayPreview(minecraft);
+                }
+            } catch (Exception | AssertionError failure) {
+                finish(minecraft, failure);
+            }
+            return;
+        }
         if (checkingTerminal) {
             try {
                 if (TerminalClientCheck.tick(minecraft)) {
                     checkingTerminal = false;
-                    showOverlayPreview(minecraft);
+                    MiningClientCheck.start(minecraft);
+                    checkingMining = true;
                 }
             } catch (Exception | AssertionError failure) {
                 finish(minecraft, failure);

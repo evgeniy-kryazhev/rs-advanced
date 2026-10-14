@@ -11,7 +11,9 @@
     "RootStorageMixin",
     "GridContainerMenuMixin",
     "DiskDriveContainerMenuMixin",
-    "StorageBlockContainerMenuMixin"
+    "StorageBlockContainerMenuMixin",
+    "MiningGameModeMixin",
+    "MiningDropsMixin"
   ],
   "client": [
     "client.AnchorVisualizationMixin",
