@@ -1,4 +1,10 @@
 {
+  "item.rsadvanced.network_terminal": "Сетевой терминал",
+  "item.rsadvanced.network_terminal.help": "Доступ к загруженному сетевому приёмнику из любого измерения через обычную сетевую карту. ПКМ — открыть сетку. Shift + ПКМ — установить или извлечь карту.",
+  "item.rsadvanced.network_terminal.no_card": "Сетевая карта не установлена",
+  "item.rsadvanced.network_terminal.unavailable": "Нет подключения. Проверьте карту, приёмник, питание сети, заряд терминала и права доступа.",
+  "gui.rsadvanced.terminal_card": "Карта терминала",
+  "gui.rsadvanced.terminal_card.slot": "Сетевая карта",
   "block.rsadvanced.infinite_item_storage_block": "Блок бесконечного хранения предметов",
   "block.rsadvanced.infinite_fluid_storage_block": "Блок бесконечного хранения жидкостей",
   "block.rsadvanced.infinite_storage_block": "Блок бесконечного хранения (%s)",

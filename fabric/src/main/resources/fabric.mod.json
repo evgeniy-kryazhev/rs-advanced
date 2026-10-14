@@ -8,6 +8,7 @@
   "environment": "*",
   "entrypoints": {
     "main": ["dev.rsadvanced.fabric.RSAdvancedFabric"],
+    "refinedstorage_plugin": ["dev.rsadvanced.fabric.RSAdvancedFabric"],
     "modmenu": ["dev.rsadvanced.fabric.config.RSAdvancedModMenu"]
   },
   "mixins": ["rsadvanced.mixins.json"],

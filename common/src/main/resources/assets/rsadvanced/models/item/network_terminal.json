@@ -1,0 +1,9 @@
+{
+  "parent": "refinedstorage:item/wireless_grid/inactive",
+  "overrides": [
+    {
+      "predicate": { "refinedstorage:network_bound_active": 1 },
+      "model": "refinedstorage:item/wireless_grid/active"
+    }
+  ]
+}
