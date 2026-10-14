@@ -103,7 +103,8 @@ public final class SharedGameTestCatalog {
             }
         } catch (InvocationTargetException exception) {
             // Preserve the scenario failure as the cause rather than exposing reflection's wrapper.
-            throw new IllegalStateException("Shared GameTest failed: " + scenario.value(), exception.getCause());
+            throw new IllegalStateException("Shared GameTest failed: " + scenario.value()
+                    + ": " + exception.getCause(), exception.getCause());
         } catch (IllegalAccessException exception) {
             throw new IllegalStateException("Cannot invoke shared GameTest: " + method, exception);
         }
