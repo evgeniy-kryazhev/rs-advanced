@@ -20,6 +20,7 @@ final class RSAdvancedNeoForgeClient {
     }
 
     static void initialize(IEventBus modBus, ModContainer modContainer) {
+        dev.rsadvanced.feature.mining.client.MiningClient.initialize();
         modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
         // Register on our mod bus during construction, before RegisterMenuScreensEvent is dispatched.
         modBus.addListener(RSAdvancedNeoForgeClient::registerScreens);

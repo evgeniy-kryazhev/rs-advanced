@@ -13,7 +13,10 @@
     "DiskDriveContainerMenuMixin",
     "StorageBlockContainerMenuMixin",
     "MiningGameModeMixin",
-    "MiningDropsMixin"
+    "MiningDropsMixin",
+    "MiningCombatMixin",
+    "MiningAttributesMixin",
+    "MiningBlockStateAccessor"
   ],
   "client": [
     "client.AnchorVisualizationMixin",

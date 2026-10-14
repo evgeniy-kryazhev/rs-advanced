@@ -18,6 +18,7 @@ final class RSAdvancedFabricClient {
 
     static void initialize() {
         FabricConfigScreen.register();
+        dev.rsadvanced.feature.mining.client.MiningClient.initialize();
         ClientLifecycleEvent.CLIENT_SETUP.register(minecraft ->
                 MenuRegistry.registerScreenFactory(AnchorContent.MENU.get(), AnchorScreen::new));
         ClientLifecycleEvent.CLIENT_SETUP.register(minecraft ->

@@ -2,6 +2,7 @@ package dev.rsadvanced.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import dev.rsadvanced.feature.mining.MiningItem;
 import dev.rsadvanced.feature.mining.MiningOperation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -25,6 +26,10 @@ public abstract class MiningGameModeMixin {
                                          Direction face, int maxBuildHeight, int sequence, CallbackInfo callback) {
         if (action == ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK) {
             rsadvanced$miningFace = face;
+            if (player.getMainHandItem().getItem() instanceof MiningItem) {
+                // Remove legacy enchantments before computing the first block's mining progress.
+                MiningItem.prepare(player.getMainHandItem());
+            }
         }
     }
 

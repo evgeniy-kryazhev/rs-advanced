@@ -37,6 +37,11 @@ public final class MiningOperation {
         if (!(tool.getItem() instanceof MiningItem) || DROPS.get() != null) {
             return original.getAsBoolean();
         }
+        MiningItem.prepare(tool);
+        MiningMode mode = MiningItem.mode(tool);
+        if (mode == MiningMode.OFF || (mode == MiningMode.VEIN && !MiningBalance.settings().veinEnabled())) {
+            return false;
+        }
         ServerLevel level = player.serverLevel();
         if (!level.isLoaded(center)) {
             return false;
@@ -48,34 +53,49 @@ public final class MiningOperation {
         var reference = RefinedStorageApi.INSTANCE.createInventorySlotReference(player, InteractionHand.MAIN_HAND);
         var context = new NetworkCardItemContext(player, reference, NetworkCardSlot::card, BuiltinPermission.INSERT);
         Network network = context.connection().orElse(null);
-        int radius = network == null || player.isCreative() || !player.hasCorrectToolForDrops(state)
-                ? 0 : MiningItem.radius(tool);
-        if (network == null && NetworkCardSlot.isNetworkCard(NetworkCardSlot.card(tool)) && !player.isCreative()) {
-            player.displayClientMessage(Component.translatable("item.rsadvanced.network_mining_tool.unavailable"), true);
+        int radius = player.isCreative() || !player.hasCorrectToolForDrops(state) ? 0 : MiningItem.radius(tool);
+        List<MiningVein.Target> targets;
+        if (mode == MiningMode.VEIN && !player.isCreative()) {
+            targets = MiningVein.find(level, center, state, MiningBalance.settings().veinLimit());
+        } else {
+            targets = area(center, face, radius).stream()
+                    .filter(position -> !position.equals(center))
+                    .map(position -> new MiningVein.Target(position, 1, center)).toList();
         }
-        if (!breakOne(player, center, tool, context, network, original)) {
+        long centerCost = MiningBalance.cost(mode, state.getDestroySpeed(level, center));
+        if (!breakOne(player, center, tool, context, network, centerCost, true, original)) {
             return false;
         }
-        for (BlockPos candidate : area(center, face, radius)) {
-            if (candidate.equals(center)) {
-                continue;
+        for (MiningVein.Target target : targets) {
+            BlockPos candidate = target.position();
+            if (player.getMainHandItem() != tool) {
+                break;
             }
-            if (player.getMainHandItem() != tool || context.connection().orElse(null) != network) {
+            // An operation which began online must stop its expansion if its original route disappears.
+            // An offline operation is self-contained and never requires a card to mine its area.
+            if (network != null && NetworkCardConnection.resolve(player, NetworkCardSlot.card(tool),
+                    BuiltinPermission.INSERT).orElse(null) != network) {
                 break;
             }
             if (!level.isLoaded(candidate)) {
                 continue;
             }
             BlockState nextState = level.getBlockState(candidate);
+            if (mode == MiningMode.VEIN && !nextState.is(state.getBlock())) {
+                continue;
+            }
             if (!eligible(player, candidate, nextState, true)) {
                 continue;
             }
-            if (!breakOne(player, candidate, tool, context, network,
-                    () -> player.gameMode.destroyBlock(candidate))) {
-                // A denied block is free; insufficient charge stops the remaining area.
-                if (!hasEnergy(tool)) {
-                    break;
-                }
+            long cost = mode == MiningMode.VEIN
+                    ? MiningBalance.veinCost(nextState.getDestroySpeed(level, candidate), target.distance())
+                    : MiningBalance.cost(mode, nextState.getDestroySpeed(level, candidate));
+            if (RefinedStorageApi.INSTANCE.isEnergyRequired() && MiningItem.energy(tool) < cost) {
+                break;
+            }
+            if (breakOne(player, candidate, tool, context, network, cost, false,
+                    () -> player.gameMode.destroyBlock(candidate)) && mode == MiningMode.VEIN) {
+                MiningNetworking.sendArc(level, target.parent(), candidate);
             }
         }
         return true;
@@ -91,17 +111,12 @@ public final class MiningOperation {
                 && player.hasCorrectToolForDrops(state)));
     }
 
-    private static boolean hasEnergy(ItemStack tool) {
-        return !RefinedStorageApi.INSTANCE.isEnergyRequired()
-                || RefinedStorageApi.INSTANCE.getEnergyStorage(tool)
-                .map(energy -> energy.getStored() >= MiningItem.BLOCK_COST).orElse(false);
-    }
-
     private static boolean breakOne(ServerPlayer player, BlockPos pos, ItemStack tool,
-                                    NetworkCardItemContext context, Network network, BooleanSupplier original) {
-        // The card controls routing, not payment. Every successful use pays, including creative use.
+                                    NetworkCardItemContext context, Network network, long requestedCost,
+                                    boolean allowPartialPayment, BooleanSupplier original) {
         boolean charged = RefinedStorageApi.INSTANCE.isEnergyRequired();
-        if (charged && !context.tryConsumeEnergy(MiningItem.BLOCK_COST)) {
+        long payment = charged && allowPartialPayment ? Math.min(requestedCost, MiningItem.energy(tool)) : requestedCost;
+        if (charged && (payment <= 0 || !context.tryConsumeEnergy(payment))) {
             player.displayClientMessage(Component.translatable("item.rsadvanced.network_mining_tool.no_energy"), true);
             return false;
         }
@@ -119,10 +134,10 @@ public final class MiningOperation {
             return result && removed;
         } finally {
             DROPS.remove();
-            // Cancelled/protected blocks cost nothing. Reacquire RS's component-backed adapter after mutations.
             if (charged && !removed && level.getBlockState(pos) == before) {
-                RefinedStorageApi.INSTANCE.getEnergyStorage(tool)
-                        .ifPresent(energy -> energy.receive(MiningItem.BLOCK_COST, Action.EXECUTE));
+                // Refund is not external charging and must not be truncated by the charge-rate limiter.
+                tool.set(com.refinedmods.refinedstorage.common.content.DataComponents.INSTANCE.getEnergy(),
+                        Math.addExact(MiningItem.energy(tool), payment));
             }
         }
     }

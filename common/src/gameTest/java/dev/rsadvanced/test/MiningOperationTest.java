@@ -32,7 +32,7 @@ public final class MiningOperationTest {
         var player = survivalPlayer(helper);
         ItemStack tool = MiningContent.ITEM.get().createAtEnergyCapacity();
         player.setItemInHand(InteractionHand.MAIN_HAND, tool);
-        MiningItem.setRadius(tool, 2);
+        MiningItem.setRadius(tool, 0);
         BlockPos center = helper.absolutePos(new BlockPos(3, 5, 3));
         player.setPos(center.getX() + 0.5, center.getY(), center.getZ() + 2);
         player.setOnGround(true);
@@ -40,7 +40,7 @@ public final class MiningOperationTest {
         int sequence = 0;
         for (var block : List.of(Blocks.DIRT, Blocks.OAK_LOG, Blocks.STONE)) {
             var state = block.defaultBlockState();
-            assertEquals(net.minecraft.world.item.Tiers.DIAMOND.getSpeed(), tool.getDestroySpeed(state));
+            assertEquals(20.0f, tool.getDestroySpeed(state));
             assertTrue(tool.isCorrectToolForDrops(state));
             helper.getLevel().setBlockAndUpdate(center, state);
             player.gameMode.handleBlockBreakAction(center,
@@ -113,14 +113,17 @@ public final class MiningOperationTest {
             assertTrue(fixture.player.gameMode.destroyBlock(center));
             for (int index = 0; index < materials.size(); index++) {
                 assertTrue(fixture.level.getBlockState(positions.get(index)).isAir());
-                assertEquals(1, storage.get(new ItemResource(materials.get(index).asItem())));
+                var material = materials.get(index);
+                var expectedItem = material == Blocks.STONE ? Items.COBBLESTONE
+                        : material == Blocks.COBWEB ? Items.STRING : material.asItem();
+                assertEquals(material == Blocks.GLASS ? 0 : 1, storage.get(new ItemResource(expectedItem)));
             }
             assertEquals(MiningItem.CAPACITY - 9 * MiningItem.BLOCK_COST,
                     RefinedStorageApi.INSTANCE.getEnergyStorage(tool).orElseThrow().getStored());
         }
     }
 
-    private static net.minecraft.server.level.ServerPlayer survivalPlayer(GameTestHelper helper) {
+    static net.minecraft.server.level.ServerPlayer survivalPlayer(GameTestHelper helper) {
         var mock = helper.makeMockServerPlayerInLevel();
         // Vanilla's GameTest mock hardcodes isCreative() to true, even after changing game mode.
         var player = new net.minecraft.server.level.ServerPlayer(helper.getLevel().getServer(), helper.getLevel(),
@@ -137,7 +140,7 @@ public final class MiningOperationTest {
             tool.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(List.of(fixture.card)));
             MiningItem.setRadius(tool, 2);
             fixture.player.setItemInHand(InteractionHand.MAIN_HAND, tool);
-            RefinedStorageApi.INSTANCE.getEnergyStorage(tool).orElseThrow().receive(300, Action.EXECUTE);
+            RefinedStorageApi.INSTANCE.getEnergyStorage(tool).orElseThrow().receive(3 * MiningItem.BLOCK_COST, Action.EXECUTE);
             var storage = fixture.network.getComponent(StorageNetworkComponent.class);
             var ordinary = new LimitedStorageImpl(100);
             storage.addSource(ordinary);
@@ -173,11 +176,11 @@ public final class MiningOperationTest {
                     return inserted;
                 }
             });
-            RefinedStorageApi.INSTANCE.getEnergyStorage(tool).orElseThrow().receive(2500, Action.EXECUTE);
+            tool.set(com.refinedmods.refinedstorage.common.content.DataComponents.INSTANCE.getEnergy(), 2500L);
             assertTrue(fixture.player.gameMode.destroyBlock(center));
             assertEquals(1, area.stream().filter(pos -> fixture.level.getBlockState(pos).isAir()).count());
             assertEquals(1, storage.get(new ItemResource(Items.COBBLESTONE)));
-            assertEquals(2400, RefinedStorageApi.INSTANCE.getEnergyStorage(tool).orElseThrow().getStored());
+            assertEquals(2500 - MiningItem.BLOCK_COST, RefinedStorageApi.INSTANCE.getEnergyStorage(tool).orElseThrow().getStored());
             for (BlockPos pos : area) {
                 fixture.level.removeBlock(pos, false);
             }
@@ -210,7 +213,7 @@ public final class MiningOperationTest {
             assertEquals(0, fixture.level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
                     new net.minecraft.world.phys.AABB(center).inflate(3)).size());
 
-            // The last paid block still inserts its real Silk Touch drop when its charge reaches zero.
+            // Legacy Silk Touch is removed; the last paid block inserts its ordinary ore drop at zero charge.
             MiningItem.setRadius(tool, 0);
             tool.enchant(fixture.level.registryAccess().registryOrThrow(Registries.ENCHANTMENT)
                     .getHolderOrThrow(Enchantments.SILK_TOUCH), 1);
@@ -219,7 +222,8 @@ public final class MiningOperationTest {
             storage.addSource(new LimitedStorageImpl(10));
             fixture.level.setBlockAndUpdate(center, Blocks.DIAMOND_ORE.defaultBlockState());
             assertTrue(fixture.player.gameMode.destroyBlock(center));
-            assertEquals(1, storage.get(new ItemResource(Items.DIAMOND_ORE)));
+            assertEquals(1, storage.get(new ItemResource(Items.DIAMOND)));
+            assertFalse(tool.isEnchanted());
             assertEquals(0, RefinedStorageApi.INSTANCE.getEnergyStorage(tool).orElseThrow().getStored());
             fixture.level.setBlockAndUpdate(center, Blocks.STONE.defaultBlockState());
             assertFalse(fixture.player.gameMode.destroyBlock(center));
@@ -237,7 +241,7 @@ public final class MiningOperationTest {
         tool.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(List.of(new ItemStack(
                 com.refinedmods.refinedstorage.common.content.Items.INSTANCE.getNetworkCard()))));
         player.setItemInHand(InteractionHand.MAIN_HAND, tool);
-        MiningItem.setRadius(tool, 2);
+        MiningItem.setRadius(tool, 0);
         BlockPos center = helper.absolutePos(new BlockPos(3, 8, 3));
         helper.getLevel().setBlockAndUpdate(center, Blocks.STONE.defaultBlockState());
         helper.getLevel().setBlockAndUpdate(center.east(), Blocks.STONE.defaultBlockState());

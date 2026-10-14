@@ -1,9 +1,12 @@
 package dev.rsadvanced.test.client;
 
+import dev.rsadvanced.RSAdvanced;
 import dev.rsadvanced.feature.connection.NetworkCardSlot;
 import dev.rsadvanced.feature.mining.MiningCardMenu;
 import dev.rsadvanced.feature.mining.MiningItem;
+import dev.rsadvanced.feature.mining.MiningMode;
 import dev.rsadvanced.feature.mining.client.MiningCardScreen;
+import dev.rsadvanced.feature.mining.client.MiningRadialScreen;
 import java.nio.file.Path;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
@@ -13,7 +16,6 @@ import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.inventory.ClickType;
-
 import static dev.rsadvanced.test.TestAssertions.assertTrue;
 
 /** Server-created menus, synchronized mode changes and in-world item presentation captures. */
@@ -77,18 +79,23 @@ final class MiningClientCheck {
             case 3 -> {
                 if (NetworkCardSlot.card(minecraft.player.getMainHandItem()).isEmpty()) {
                     minecraft.screen.onClose();
-                    minecraft.getConnection().send(new ServerboundPlayerCommandPacket(minecraft.player,
-                            ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY));
-                    minecraft.gameMode.useItem(minecraft.player, InteractionHand.MAIN_HAND);
-                    minecraft.getConnection().send(new ServerboundPlayerCommandPacket(minecraft.player,
-                            ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY));
+                    net.minecraft.client.KeyMapping.click(
+                            dev.rsadvanced.feature.mining.client.MiningClient.SELECT_MODE.getDefaultKey());
                     advance();
                 }
             }
             case 4 -> {
-                if (MiningItem.radius(minecraft.player.getMainHandItem()) == 1) {
+                if (minecraft.screen instanceof MiningRadialScreen radial) {
+                    capture(minecraft, "mining-radial.png");
+                    // Area sector 1 points down; speed sector 2 is Fast, also pointing down.
+                    radial.mouseClicked(radial.width / 2.0, radial.height / 2.0 + 38, 0);
+                    radial.mouseClicked(radial.width / 2.0, radial.height / 2.0 + 86, 0);
+                    radial.onClose();
+                }
+                if (MiningItem.radius(minecraft.player.getMainHandItem()) == 1
+                        && MiningItem.mode(minecraft.player.getMainHandItem()) == MiningMode.FAST) {
                     var model = minecraft.getModelManager().getModel(ModelResourceLocation.inventory(
-                            dev.rsadvanced.RSAdvanced.id("network_mining_tool")));
+                            RSAdvanced.id("network_mining_tool")));
                     assertTrue(model != minecraft.getModelManager().getMissingModel());
                     assertTrue(model.isGui3d());
                     originalMainHand = minecraft.options.mainHand().get();
