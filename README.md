@@ -12,44 +12,17 @@ An addon for **Refined Storage 2** that expands storage and automation. Includes
 - **Infinite Water Cell** — an endless source of water.
 - **Network Anchor** — keeps chunks containing connected RS nodes loaded in its own dimension.
 
-An enabled Network Anchor costs `80 + N × (N + 1) / 2` FE per tick for `N` unique
-network chunks. Anchors in the same network and dimension share the area: the anchor with
-the lowest X, then Y, then Z pays, and the others serve as reserves. A separate dimension
-needs its own anchor. Insufficient power immediately releases the area. The default limit
-is 256 chunks; exceeding it stops the entire area.
+Network Anchors keep connected machines working while you are away. Each dimension needs
+its own anchor. Energy use grows with the loaded area; the default limit is 256 chunks.
+Loading stops if the network runs out of energy or exceeds the configured limit.
 
 Craft an anchor with a Machine Casing in the center, Advanced Processors in the corners,
 and Ender Pearls on the four sides. Its screen shows the state, area, cost and role, and lets
-you enable it or show the area's white contour with translucent blue faces within 256 blocks by default.
-Walking or flying beyond this radius pauses the overlay and its area updates while keeping
-it selected; returning automatically shows the latest area. The radius includes height.
-Adjacent chunks form one area without internal walls or intermediate chunk divisions.
-The screen uses the vanilla Minecraft panel and buttons. Opening uses RS `OPEN` permission;
-changing enabled state uses `BUILD`.
+you enable it or display the loaded area. Access follows the network's security settings.
 
-Settings are stored in `config/rsadvanced.toml` on Fabric and `config/rsadvanced-common.toml` on NeoForge.
-Both use the same TOML structure:
-
-```toml
-[anchor]
-baseCost = 80
-chunkCostMultiplier = 1
-maxChunks = 256
-randomTicks = true
-visualizationDistance = 256
-```
-
-Energy costs must be nonnegative, `maxChunks` must be 1–65536, and `visualizationDistance` must be
-1–4096 blocks. The total energy cost at `maxChunks` must fit in a signed 64-bit integer.
-Open the configuration screen through **Mod Menu → RS Advanced** on Fabric or **Mods → RS Advanced → Config**
-on NeoForge. Fabric uses AutoConfig/Cloth Config; NeoForge uses its built-in configuration screen.
-Changes apply after restarting the server or reopening a single-player world. The screen edits the local
-installation's settings; a remote server uses its own TOML file. Existing `rsadvanced.json` files are ignored
-and are not migrated; a missing TOML file is created with defaults.
-
-Random ticks follow
-`randomTickSpeed`; the anchor does not create additional natural mob spawning. On restart,
-the last paid area is restored for at most 100 ticks while the RS graph initializes.
+Configure the mod through **Mod Menu → RS Advanced** on Fabric or **Mods → RS Advanced → Config**
+on NeoForge. Changes apply after restarting the server or reopening a single-player world.
+On multiplayer servers, the server's settings determine gameplay.
 
 Each cell shows a small resource icon in its lower-right corner in inventories. Infinite cells appear in the Refined Storage creative tab. Hold Shift over a cell to view its help tooltip.
 
@@ -61,8 +34,7 @@ Cells need no initial filling and never run out. They also absorb returned resou
 
 ## Custom cells
 
-Add item or fluid definitions and ordinary crafting recipes through a datapack — no Java changes,
-compilation or datagen needed. Names use the resource’s client translation automatically.
+Add more infinite item or fluid cells through datapacks.
 See the [lava datapack example](examples/lava-datapack). Add it to your world's `datapacks` directory before opening the world.
 Reopen the world or restart the server after changing cell definitions.
 
@@ -79,11 +51,5 @@ Install RS Advanced on both the client and server, together with:
 - Optional **Mod Menu** on Fabric to access the configuration screen.
 
 Use the release JAR matching your loader. Forge is not supported.
-
-## Build
-
-With JDK 21 installed, run `gradlew.bat build` on Windows or `bash gradlew build` on Linux/macOS. Release JARs are in `fabric/build/libs` and `neoforge/build/libs`; use the files without `dev` or `sources` in their names.
-
-See [Repository Guidelines](AGENTS.md) for contributor instructions, architecture, and validation commands.
 
 Licensed under the [MIT License](LICENSE).
