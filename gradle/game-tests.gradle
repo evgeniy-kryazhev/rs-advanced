@@ -8,6 +8,31 @@ sourceSets {
     }
 }
 
+// Index only common server scenarios. Loader adapters and client-only classes are never scanned.
+def sharedTestJavaDirectory = rootProject.file('common/src/gameTest/java')
+def sharedTestSources = fileTree(sharedTestJavaDirectory) {
+    include '**/*Test.java'
+    exclude '**/client/**', '**/mixin/**'
+}
+def sharedTestIndexDirectory = layout.buildDirectory.dir('generated/sharedGameTests')
+def generateSharedGameTestIndex = tasks.register('generateSharedGameTestIndex') {
+    inputs.files(sharedTestSources)
+    outputs.dir(sharedTestIndexDirectory)
+    doLast {
+        List<String> classNames = sharedTestSources.files.collect { sourceFile ->
+            sharedTestJavaDirectory.toPath().relativize(sourceFile.toPath()).toString()
+                    .replace(File.separator, '.').replaceAll(/\.java$/, '')
+        }.sort()
+        File indexFile = sharedTestIndexDirectory.get()
+                .file('META-INF/rsadvanced/shared-gametest-classes.txt').asFile
+        indexFile.parentFile.mkdirs()
+        indexFile.setText(classNames.join('\n') + '\n', 'UTF-8')
+    }
+}
+tasks.named('processGameTestResources') {
+    from(generateSharedGameTestIndex)
+}
+
 loom {
     mods {
         rsadvanced {
@@ -139,10 +164,11 @@ loom {
 
 tasks.named('runGameTest') {
     dependsOn tasks.named('gameTestClasses')
-    if (project.name == 'neoforge') {
-        // Both launches copy the same Architectury agent. Windows locks the JAR
-        // while a server is running, so loader tests must launch sequentially.
-        mustRunAfter ':fabric:runGameTest'
+    // Optional client development mods can send handshake-dependent packets to GameTest mock players.
+    // Keep them available in runClient without changing the isolated server test environment.
+    classpath = classpath.filter { file ->
+        String filename = file.name.toLowerCase(Locale.ROOT)
+        !filename.startsWith('mekanism-') && !filename.startsWith('jei-')
     }
     doFirst {
         project.layout.buildDirectory.dir('reports/gameTest').get().asFile.mkdirs()

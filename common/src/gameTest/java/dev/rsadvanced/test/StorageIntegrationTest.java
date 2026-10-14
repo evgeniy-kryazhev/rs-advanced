@@ -23,6 +23,7 @@ import static dev.rsadvanced.test.TestAssertions.assertTrue;
 
 /** Runs on both loaders, using the actual Disk Drive wrapper chain. */
 public class StorageIntegrationTest {
+    @SharedGameTest(value = "mixed_disks", order = 11)
     public static void diskWrappersPreserveInfiniteStockAndOrdinaryStock() {
         for (TestCell cell : TestCell.values()) {
             ResourceKey resource = cell.resource();
@@ -62,6 +63,7 @@ public class StorageIntegrationTest {
         }
     }
 
+    @SharedGameTest(value = "access_and_removal", order = 22)
     public static void multipleDisksAndAccessChangesUpdateInfinityMetadata() {
         TestCell cell = TestCell.named("rsadvanced:cobblestone");
         ResourceKey resource = cell.resource();
@@ -94,6 +96,7 @@ public class StorageIntegrationTest {
         assertFalse(InfiniteSources.collect(network).contains(resource));
     }
 
+    @SharedGameTest(value = "storage_codec", order = 23)
     public static void sourceCodecStoresOnlyDefinitionIdentity() {
         for (TestCell cell : TestCell.values()) {
             var codec = cell.getMapCodec(() -> { }).codec();
@@ -106,6 +109,7 @@ public class StorageIntegrationTest {
         }
     }
 
+    @SharedGameTest(value = "absorbed_returns", order = 13)
     public static void returnedResourcesAreAbsorbedWithoutCacheGrowth() {
         for (TestCell cell : TestCell.values()) {
             ResourceKey resource = cell.resource();
@@ -149,6 +153,7 @@ public class StorageIntegrationTest {
         }
     }
 
+    @SharedGameTest(value = "insertion_priorities", order = 14)
     public static void insertionPreservesFiniteStockPrioritiesAndVoidExcess() {
         for (TestCell cell : TestCell.values()) {
             ResourceKey resource = cell.resource();
