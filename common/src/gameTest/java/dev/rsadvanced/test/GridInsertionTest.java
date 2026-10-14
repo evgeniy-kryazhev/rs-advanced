@@ -24,6 +24,7 @@ import static dev.rsadvanced.test.TestAssertions.assertTrue;
 
 /** Exercises the loader's real item/fluid strategies and container transactions, without a client. */
 public final class GridInsertionTest {
+    @SharedGameTest(value = "grid_returns", order = 15)
     public static void gridReturnsCobblestoneAndEmptiesWaterBucket(GameTestHelper helper) {
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
         AbstractContainerMenu menu = player.containerMenu;

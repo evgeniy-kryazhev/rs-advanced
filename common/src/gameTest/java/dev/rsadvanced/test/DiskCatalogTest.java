@@ -32,6 +32,7 @@ import static dev.rsadvanced.test.TestAssertions.assertEquals;
 import static dev.rsadvanced.test.TestAssertions.assertTrue;
 
 public final class DiskCatalogTest {
+    @SharedGameTest(value = "disk_catalog", order = 17)
     public static void catalogResourcesAndQuotasAreComplete(GameTestHelper helper) throws IOException {
         // Read the competing fixture from selected packs in priority order, independently of the world registry.
         String expectedResource = null;
@@ -102,6 +103,7 @@ public final class DiskCatalogTest {
         }
     }
 
+    @SharedGameTest(value = "invalid_definitions", order = 18)
     public static void invalidDefinitionsAreRejected() {
         for (String definition : List.of(
                 "{\"kind\":\"chemical\",\"resource\":\"minecraft:water\"}",
@@ -113,6 +115,7 @@ public final class DiskCatalogTest {
         }
     }
 
+    @SharedGameTest(value = "unknown_cells", order = 19)
     public static void unknownCellsKeepTheirComponents(GameTestHelper helper) {
         var repository = new StorageRepositoryImpl();
         ItemStack unknown = AdvancedContent.cell(ResourceLocation.parse("missing_pack:cell"), DiskResourceKind.ITEM);
@@ -137,6 +140,7 @@ public final class DiskCatalogTest {
         }
     }
 
+    @SharedGameTest(value = "catalog_session", order = 20)
     public static void worldCatalogDoesNotLeakBetweenSessions(GameTestHelper helper) {
         var registries = helper.getLevel().registryAccess();
         ItemStack cell = TestCell.named("rsadvanced:cobblestone").stack();

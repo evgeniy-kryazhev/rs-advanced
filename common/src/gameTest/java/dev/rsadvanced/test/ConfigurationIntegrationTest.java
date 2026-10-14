@@ -12,6 +12,7 @@ public final class ConfigurationIntegrationTest {
     private ConfigurationIntegrationTest() {
     }
 
+    @SharedGameTest(value = "toml_configuration", order = 4)
     public static void defaultsAreGeneratedWithoutJsonMigration() throws IOException {
         String filename = Platform.isFabric() ? "rsadvanced.toml" : "rsadvanced-common.toml";
         var directory = Platform.getConfigFolder();

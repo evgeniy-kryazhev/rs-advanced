@@ -24,6 +24,7 @@ import static dev.rsadvanced.test.TestAssertions.assertFalse;
 import static dev.rsadvanced.test.TestAssertions.assertTrue;
 
 public final class DiskDriveDisplayTest {
+    @SharedGameTest(value = "drive_display", order = 21)
     public static void driveStatisticsExcludeInfiniteDisks(GameTestHelper helper) throws ReflectiveOperationException {
         var player = helper.makeMockServerPlayerInLevel();
         DiskDriveContainerMenu menu = new DiskDriveContainerMenu(7, player.getInventory(),

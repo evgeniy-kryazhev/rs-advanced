@@ -24,6 +24,7 @@ import static dev.rsadvanced.test.TestAssertions.assertTrue;
 
 /** Actual world nodes and each loader's registered lookup/capability; no mock network. */
 public final class AnchorIntegrationTest {
+    @SharedGameTest(value = "anchor_visualization_lifecycle", order = 5)
     public static void visualizationSelectionLifecycle(GameTestHelper helper) throws ReflectiveOperationException {
         var level = helper.getLevel();
         BlockPos position = new BlockPos(23008, 80, 23008);
@@ -95,6 +96,7 @@ public final class AnchorIntegrationTest {
         method.invoke(null, server, sink);
     }
 
+    @SharedGameTest(value = "anchor_visualization_packet", order = 6)
     public static void visualizationPacket(GameTestHelper helper) {
         var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(),
                 helper.getLevel().registryAccess());
@@ -116,6 +118,7 @@ public final class AnchorIntegrationTest {
         }
     }
 
+    @SharedGameTest(value = "anchor_topology_power", order = 9, timeoutTicks = 200, completion = SharedGameTest.Completion.MANUAL)
     public static void topologyAndPower(GameTestHelper helper) {
         var level = helper.getLevel();
         BlockPos controllerPosition = new BlockPos(20014, 80, 20008);
@@ -195,6 +198,7 @@ public final class AnchorIntegrationTest {
         });
     }
 
+    @SharedGameTest(value = "anchor_container_counts", order = 7)
     public static void incrementalContainerCounts(GameTestHelper helper) {
         var network = new com.refinedmods.refinedstorage.api.network.impl.NetworkImpl(
                 com.refinedmods.refinedstorage.common.api.RefinedStorageApi.INSTANCE.getNetworkComponentMapFactory());
@@ -216,6 +220,7 @@ public final class AnchorIntegrationTest {
         network.remove();
     }
 
+    @SharedGameTest(value = "anchor_overlaps_merge_limit", order = 10, timeoutTicks = 200, completion = SharedGameTest.Completion.MANUAL)
     public static void overlapsMergesAndLimit(GameTestHelper helper) {
         var level = helper.getLevel();
         BlockPos firstControllerPosition = new BlockPos(30002, 80, 30008);
@@ -306,6 +311,7 @@ public final class AnchorIntegrationTest {
         });
     }
 
+    @SharedGameTest(value = "anchor_persistence_recipe_permissions", order = 8)
     public static void persistenceRecipeAndPermissions(GameTestHelper helper) {
         var level = helper.getLevel();
         BlockPos position = helper.absolutePos(new BlockPos(1, 1, 1));

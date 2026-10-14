@@ -33,6 +33,7 @@ import static dev.rsadvanced.test.TestAssertions.assertEquals;
 import static dev.rsadvanced.test.TestAssertions.assertTrue;
 
 public final class InfiniteStorageBlockTest {
+    @SharedGameTest(value = "infinite_storage_blocks", order = 1)
     public static void placementDropsReloadAndRecipes(GameTestHelper helper) {
         var level = helper.getLevel();
         var player = helper.makeMockServerPlayerInLevel();
@@ -107,6 +108,7 @@ public final class InfiniteStorageBlockTest {
         }
     }
 
+    @SharedGameTest(value = "infinite_storage_block_permissions", order = 2)
     public static void menuRequiresBuildPermission(GameTestHelper helper) {
         var level = helper.getLevel();
         BlockPos position = helper.absolutePos(new BlockPos(0, 4, 0));
@@ -163,6 +165,7 @@ public final class InfiniteStorageBlockTest {
         }
     }
 
+    @SharedGameTest(value = "infinite_storage_block_network", order = 3, timeoutTicks = 100, completion = SharedGameTest.Completion.MANUAL)
     public static void networkConnectionAndRemoval(GameTestHelper helper) {
         var level = helper.getLevel();
         BlockPos controllerPosition = new BlockPos(25008, 80, 25008);

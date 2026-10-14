@@ -1,0 +1,72 @@
+// Loaders provide their own launch task; the shared scenarios and reports form one test matrix.
+List<String> gameTestLoaders = enabled_platforms.split(',').collect { it.trim() }
+if (gameTestLoaders.isEmpty() || gameTestLoaders.any { it.isEmpty() }
+        || gameTestLoaders.toSet().size() != gameTestLoaders.size()) {
+    throw new GradleException('enabled_platforms must contain distinct loader names')
+}
+gameTestLoaders.each { loader ->
+    if (findProject(":${loader}") == null || loader == 'common') {
+        throw new GradleException("No GameTest adapter project for enabled loader: ${loader}")
+    }
+}
+
+def verifyGameTestReports = tasks.register('verifyGameTestReports') {
+    group = 'verification'
+    description = 'Checks successful and identical scenario sets across enabled loaders.'
+    dependsOn gameTestLoaders.collect { ":${it}:runGameTest" }
+    doLast {
+        Set<String> expectedIdentifiers = null
+        gameTestLoaders.each { loader ->
+            File report = project(loader).layout.buildDirectory.file('reports/gameTest/results.xml').get().asFile
+            if (!report.isFile()) {
+                throw new GradleException("Missing GameTest report for ${loader}: ${report}")
+            }
+            def document = new groovy.xml.XmlSlurper().parse(report)
+            def cases = document.depthFirst().findAll { it.name() == 'testcase' }
+            List<String> identifiers = cases.collect { it.@name.text() }
+            if (identifiers.isEmpty() || identifiers.toSet().size() != identifiers.size()) {
+                throw new GradleException("Empty or duplicate GameTest results for ${loader}")
+            }
+            if (cases.any { it.failure.size() > 0 || it.error.size() > 0 || it.skipped.size() > 0 }) {
+                throw new GradleException("Failed or skipped GameTest scenarios for ${loader}")
+            }
+            Set<String> actualIdentifiers = new TreeSet<>(identifiers)
+            if (expectedIdentifiers != null && actualIdentifiers != expectedIdentifiers) {
+                throw new GradleException("GameTest scenario mismatch for ${loader}: missing="
+                        + (expectedIdentifiers - actualIdentifiers) + ', additional='
+                        + (actualIdentifiers - expectedIdentifiers))
+            }
+            expectedIdentifiers = actualIdentifiers
+            logger.lifecycle("${loader}: ${actualIdentifiers.size()} shared GameTests passed")
+        }
+    }
+}
+
+tasks.register('runGameTests') {
+    group = 'verification'
+    description = 'Runs shared GameTests sequentially on every enabled loader.'
+    dependsOn verifyGameTestReports
+}
+
+tasks.named('check') {
+    dependsOn verifyGameTestReports
+}
+
+gradle.projectsEvaluated {
+    gameTestLoaders.eachWithIndex { loader, index ->
+        def loaderProject = project(loader)
+        def loaderTask = loaderProject.tasks.named('runGameTest')
+        def reportFile = loaderProject.layout.buildDirectory.file('reports/gameTest/results.xml')
+        // Architectury launches share an agent JAR which Windows locks during execution.
+        if (index > 0) {
+            loaderTask.configure {
+                mustRunAfter ":${gameTestLoaders[index - 1]}:runGameTest"
+            }
+        }
+        loaderTask.configure {
+            doFirst {
+                reportFile.get().asFile.delete()
+            }
+        }
+    }
+}

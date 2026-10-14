@@ -31,6 +31,7 @@ import static dev.rsadvanced.test.TestAssertions.assertTrue;
 
 /** Uses RS's registered loader strategy and a real chest capability/transaction. */
 public final class ExporterTransferTest {
+    @SharedGameTest(value = "exporter_limits", order = 16)
     public static void exporterRespectsQuotaAndDestinationCapacity(GameTestHelper helper) {
         BlockPos chestPosition = helper.absolutePos(new BlockPos(1, 1, 1));
         helper.getLevel().setBlockAndUpdate(chestPosition, Blocks.CHEST.defaultBlockState());

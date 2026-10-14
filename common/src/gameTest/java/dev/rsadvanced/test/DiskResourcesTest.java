@@ -24,6 +24,7 @@ import static dev.rsadvanced.test.TestAssertions.assertEquals;
 import static dev.rsadvanced.test.TestAssertions.assertTrue;
 
 public class DiskResourcesTest {
+    @SharedGameTest(value = "disk_inventory_reload", order = 24)
     public static void standardDriveAcceptsDisksAndReloadsTheirStatelessItemStacks() {
         var registries = RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY);
         var operations = registries.createSerializationContext(NbtOps.INSTANCE);
@@ -44,6 +45,11 @@ public class DiskResourcesTest {
             assertEquals(64, source.extract(cell.resource(), 64, Action.EXECUTE, Actor.EMPTY));
             assertEquals(64, source.insert(cell.resource(), 64, Action.EXECUTE, Actor.EMPTY));
         }
+    }
+
+    @SharedGameTest(value = "recipes_and_buckets", order = 25)
+    public static void recipesAndBuckets(net.minecraft.gametest.framework.GameTestHelper helper) {
+        survivalRecipesMatchAndReturnEmptyBuckets(helper.getLevel());
     }
 
     public static void survivalRecipesMatchAndReturnEmptyBuckets(ServerLevel level) {
@@ -91,6 +97,7 @@ public class DiskResourcesTest {
         }
     }
 
+    @SharedGameTest(value = "network_packet", order = 26)
     public static void infinityPacketRoundTripsMenuIdentityAndResources() {
         RegistryFriendlyByteBuf buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY));
         try {
