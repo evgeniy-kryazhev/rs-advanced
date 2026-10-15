@@ -60,7 +60,7 @@ public final class MiningClient {
                     InteractionHand hand = minecraft.player.getMainHandItem().getItem() instanceof MiningItem
                             ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
                     if (minecraft.player.getItemInHand(hand).getItem() instanceof MiningItem) {
-                        minecraft.setScreen(new MiningRadialScreen(hand));
+                        MiningRadialMenu.open(hand);
                     }
                 }
             }
@@ -100,7 +100,9 @@ public final class MiningClient {
             int size = MiningItem.radius(stack) * 2 + 1;
             Component label = Component.translatable("gui.rsadvanced.mining_hud",
                     Component.translatable("gui.rsadvanced.mining_mode." + mode.getSerializedName()),
-                    mode == MiningMode.VEIN ? "—" : size + "×" + size, MiningItem.energy(stack),
+                    Component.translatable(MiningItem.veinMining(stack)
+                            ? "gui.rsadvanced.mining_vein_on" : "gui.rsadvanced.mining_vein_off"),
+                    size + "×" + size, MiningItem.energy(stack),
                     NetworkCardSlot.card(stack).isEmpty()
                             ? Component.translatable("gui.rsadvanced.mining_offline")
                             : Component.translatable(CONNECTED[hand.ordinal()]

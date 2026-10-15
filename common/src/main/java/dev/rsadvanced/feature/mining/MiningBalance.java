@@ -39,9 +39,9 @@ public final class MiningBalance {
         return hardness == 0 ? Math.max(fullCost / 2, 1) : fullCost;
     }
 
-    public static long veinCost(float hardness, int distance) {
+    public static long veinCost(MiningMode speed, float hardness, int distance) {
         // Match Mekanism's rounding in joules before translating the result to FE.
-        double joules = Math.ceil(cost(MiningMode.VEIN, hardness) * 2.5 * 0.5 * Math.pow(distance, 1.5));
+        double joules = Math.ceil(cost(speed, hardness) * 2.5 * 0.5 * Math.pow(distance, 1.5));
         return Math.max(1, (long) Math.ceil(joules / 2.5));
     }
 

@@ -54,14 +54,30 @@ public class MiningItem extends AbstractEnergyItem implements SlotReferenceHandl
     }
 
     public static MiningMode mode(ItemStack stack) {
-        return stack.getOrDefault(AdvancedComponents.MINING_MODE.get(), MiningMode.NORMAL);
+        MiningMode stored = stack.getOrDefault(AdvancedComponents.MINING_MODE.get(), MiningMode.NORMAL);
+        return stored == MiningMode.VEIN ? MiningMode.NORMAL : stored;
     }
 
     public static void setMode(ItemStack stack, MiningMode mode) {
-        stack.set(AdvancedComponents.MINING_MODE.get(), mode);
+        boolean vein = veinMining(stack) || mode == MiningMode.VEIN;
+        stack.set(AdvancedComponents.MINING_MODE.get(), mode == MiningMode.VEIN ? MiningMode.NORMAL : mode);
+        stack.set(AdvancedComponents.MINING_VEIN.get(), vein);
+    }
+
+    public static boolean veinMining(ItemStack stack) {
+        boolean legacyVein = stack.getOrDefault(AdvancedComponents.MINING_MODE.get(), MiningMode.NORMAL) == MiningMode.VEIN;
+        return stack.getOrDefault(AdvancedComponents.MINING_VEIN.get(), legacyVein);
+    }
+
+    public static void setVeinMining(ItemStack stack, boolean enabled) {
+        MiningMode speed = mode(stack);
+        stack.set(AdvancedComponents.MINING_MODE.get(), speed);
+        stack.set(AdvancedComponents.MINING_VEIN.get(), enabled);
     }
 
     public static void prepare(ItemStack stack) {
+        // Migrate the former exclusive Vein mode without altering the area, energy or card.
+        setMode(stack, mode(stack));
         // Existing enchantments are explicitly removed on first server use, without changing energy or the card.
         stack.remove(DataComponents.ENCHANTMENTS);
         stack.remove(DataComponents.STORED_ENCHANTMENTS);
@@ -191,6 +207,8 @@ public class MiningItem extends AbstractEnergyItem implements SlotReferenceHandl
         lines.add(Component.translatable("item.rsadvanced.network_mining_tool.speed_mode",
                 Component.translatable("gui.rsadvanced.mining_mode." + mode(stack).getSerializedName()), mode(stack).speed()));
         lines.add(modeLabel(stack));
+        lines.add(Component.translatable(veinMining(stack)
+                ? "gui.rsadvanced.mining_vein_on" : "gui.rsadvanced.mining_vein_off"));
         lines.add(Component.translatable("item.rsadvanced.network_mining_tool.help"));
         ItemStack card = NetworkCardSlot.card(stack);
         if (!card.isEmpty()) {

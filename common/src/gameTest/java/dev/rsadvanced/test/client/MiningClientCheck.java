@@ -6,7 +6,7 @@ import dev.rsadvanced.feature.mining.MiningCardMenu;
 import dev.rsadvanced.feature.mining.MiningItem;
 import dev.rsadvanced.feature.mining.MiningMode;
 import dev.rsadvanced.feature.mining.client.MiningCardScreen;
-import dev.rsadvanced.feature.mining.client.MiningRadialScreen;
+import dev.rsadvanced.client.radial.slice.SliceRadialScreen;
 import java.nio.file.Path;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
@@ -85,15 +85,17 @@ final class MiningClientCheck {
                 }
             }
             case 4 -> {
-                if (minecraft.screen instanceof MiningRadialScreen radial) {
+                if (minecraft.screen instanceof SliceRadialScreen radial) {
                     capture(minecraft, "mining-radial.png");
-                    // Area sector 1 points down; speed sector 2 is Fast, also pointing down.
-                    radial.mouseClicked(radial.width / 2.0, radial.height / 2.0 + 38, 0);
-                    radial.mouseClicked(radial.width / 2.0, radial.height / 2.0 + 86, 0);
+                    // Slice commands run through the same backend-independent mining model.
+                    assertTrue(radial.mouseClicked(radial.width / 2.0 - 50, radial.height / 2.0 - 50, 0));
+                    assertTrue(radial.mouseClicked(radial.width / 2.0 - 50, radial.height / 2.0 + 50, 0));
+                    assertTrue(radial.mouseClicked(radial.width / 2.0 + 75, radial.height / 2.0, 0));
                     radial.onClose();
                 }
                 if (MiningItem.radius(minecraft.player.getMainHandItem()) == 1
-                        && MiningItem.mode(minecraft.player.getMainHandItem()) == MiningMode.FAST) {
+                        && MiningItem.mode(minecraft.player.getMainHandItem()) == MiningMode.FAST
+                        && MiningItem.veinMining(minecraft.player.getMainHandItem())) {
                     var model = minecraft.getModelManager().getModel(ModelResourceLocation.inventory(
                             RSAdvanced.id("network_mining_tool")));
                     assertTrue(model != minecraft.getModelManager().getMissingModel());

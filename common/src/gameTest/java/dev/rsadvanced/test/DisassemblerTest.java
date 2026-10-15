@@ -17,6 +17,90 @@ import net.minecraft.world.level.block.Blocks;
 import static dev.rsadvanced.test.TestAssertions.*;
 
 public final class DisassemblerTest {
+    @SharedGameTest("disassembler_independent_veins_and_area")
+    public static void areaSeedsDifferentVeinsAtEverySpeed(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var player = MiningOperationTest.survivalPlayer(helper);
+        BlockPos center = helper.absolutePos(new BlockPos(3, 8, 3));
+        for (MiningMode speed : List.of(MiningMode.SLOW, MiningMode.NORMAL, MiningMode.FAST)) {
+            for (int radius : List.of(0, 1, 2)) {
+                ItemStack tool = MiningContent.ITEM.get().createAtEnergyCapacity();
+                MiningItem.setMode(tool, speed);
+                MiningItem.setRadius(tool, radius);
+                MiningItem.setVeinMining(tool, true);
+                player.setItemInHand(InteractionHand.MAIN_HAND, tool);
+                var positions = MiningOperation.area(center, net.minecraft.core.Direction.UP, radius);
+                for (BlockPos position : positions) {
+                    level.setBlockAndUpdate(position, Blocks.DIRT.defaultBlockState());
+                }
+                BlockPos ironSeed = center.east(radius);
+                BlockPos coalExtra = center.above();
+                BlockPos ironExtra = ironSeed.above();
+                level.setBlockAndUpdate(center, Blocks.COAL_ORE.defaultBlockState());
+                level.setBlockAndUpdate(coalExtra, Blocks.COAL_ORE.defaultBlockState());
+                if (radius > 0) {
+                    level.setBlockAndUpdate(ironSeed, Blocks.IRON_ORE.defaultBlockState());
+                    level.setBlockAndUpdate(ironExtra, Blocks.IRON_ORE.defaultBlockState());
+                }
+                assertTrue(player.gameMode.destroyBlock(center));
+                for (BlockPos position : positions) {
+                    assertTrue(level.getBlockState(position).isAir());
+                }
+                assertTrue(level.getBlockState(coalExtra).isAir());
+                if (radius > 0) {
+                    assertTrue(level.getBlockState(ironExtra).isAir());
+                }
+                long expectedCost = positions.size() * MiningBalance.cost(speed, 1)
+                        + (radius > 0 ? 2 : 1) * MiningBalance.veinCost(speed, 1, 1);
+                assertEquals(MiningItem.CAPACITY - expectedCost, MiningItem.energy(tool));
+            }
+        }
+    }
+
+    @SharedGameTest("disassembler_veins_disabled_and_unpaid")
+    public static void independentToggleAndInsufficientChargeStopVeins(GameTestHelper helper) {
+        var player = MiningOperationTest.survivalPlayer(helper);
+        BlockPos center = helper.absolutePos(new BlockPos(3, 8, 3));
+        for (boolean enabled : List.of(false, true)) {
+            ItemStack tool = MiningContent.ITEM.get().createAtEnergyCapacity();
+            MiningItem.setMode(tool, MiningMode.FAST);
+            MiningItem.setVeinMining(tool, enabled);
+            long initialEnergy = enabled ? 512 : MiningItem.CAPACITY;
+            tool.set(com.refinedmods.refinedstorage.common.content.DataComponents.INSTANCE.getEnergy(), initialEnergy);
+            player.setItemInHand(InteractionHand.MAIN_HAND, tool);
+            helper.getLevel().setBlockAndUpdate(center, Blocks.COAL_ORE.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(center.above(), Blocks.COAL_ORE.defaultBlockState());
+            assertTrue(player.gameMode.destroyBlock(center));
+            assertEquals(initialEnergy - 512, MiningItem.energy(tool));
+            assertTrue(helper.getLevel().getBlockState(center.above()).is(Blocks.COAL_ORE));
+            helper.getLevel().removeBlock(center.above(), false);
+        }
+    }
+
+    @SharedGameTest("disassembler_legacy_vein_migration")
+    public static void legacyVeinModeRetainsAreaEnergyAndCard(GameTestHelper helper) {
+        ItemStack tool = MiningContent.ITEM.get().createAtEnergyCapacity();
+        tool.set(dev.rsadvanced.content.AdvancedComponents.MINING_MODE.get(), MiningMode.VEIN);
+        MiningItem.setRadius(tool, 2);
+        var card = new ItemStack(com.refinedmods.refinedstorage.common.content.Items.INSTANCE.getNetworkCard());
+        tool.set(net.minecraft.core.component.DataComponents.CONTAINER,
+                net.minecraft.world.item.component.ItemContainerContents.fromItems(List.of(card)));
+        tool = ItemStack.parse(helper.getLevel().registryAccess(), tool.save(helper.getLevel().registryAccess()))
+                .orElseThrow();
+        assertEquals(MiningMode.NORMAL, MiningItem.mode(tool));
+        assertTrue(MiningItem.veinMining(tool));
+        MiningItem.prepare(tool);
+        assertEquals(MiningMode.NORMAL, tool.get(dev.rsadvanced.content.AdvancedComponents.MINING_MODE.get()));
+        assertTrue(MiningItem.veinMining(tool));
+        MiningItem.setMode(tool, MiningMode.SLOW);
+        assertTrue(MiningItem.veinMining(tool));
+        MiningItem.setVeinMining(tool, false);
+        assertEquals(MiningMode.SLOW, MiningItem.mode(tool));
+        assertEquals(2, MiningItem.radius(tool));
+        assertEquals(MiningItem.CAPACITY, MiningItem.energy(tool));
+        assertTrue(ItemStack.matches(card, dev.rsadvanced.feature.connection.NetworkCardSlot.card(tool)));
+    }
+
     @SharedGameTest("disassembler_server_balance_authority")
     public static void clientSnapshotCannotOverrideServerBalance(GameTestHelper helper) {
         try {
@@ -90,8 +174,9 @@ public final class DisassemblerTest {
     public static void minesDiagonalVeinsWithoutCardAndStopsAtDifferentOre(GameTestHelper helper) {
         var player = MiningOperationTest.survivalPlayer(helper);
         ItemStack tool = MiningContent.ITEM.get().createAtEnergyCapacity();
-        MiningItem.setMode(tool, MiningMode.VEIN);
-        MiningItem.setRadius(tool, 2);
+        MiningItem.setMode(tool, MiningMode.NORMAL);
+        MiningItem.setVeinMining(tool, true);
+        MiningItem.setRadius(tool, 0);
         player.setItemInHand(InteractionHand.MAIN_HAND, tool);
         BlockPos center = helper.absolutePos(new BlockPos(3, 8, 3));
         BlockPos diagonal = center.offset(1, 1, 1);
@@ -123,9 +208,16 @@ public final class DisassemblerTest {
         ItemStack tool = MiningContent.ITEM.get().createAtEnergyCapacity();
         player.setItemInHand(InteractionHand.MAIN_HAND, tool);
         var slot = RefinedStorageApi.INSTANCE.createInventorySlotReference(player, InteractionHand.MAIN_HAND);
-        assertFalse(MiningNetworking.select(player, new MiningSelectionPayload(slot, 99, 1)));
-        assertFalse(MiningNetworking.select(player, new MiningSelectionPayload(slot, 0, 99)));
-        assertTrue(MiningNetworking.select(player, new MiningSelectionPayload(slot, MiningMode.SLOW.ordinal(), 1)));
+        assertFalse(MiningNetworking.select(player, new MiningSelectionPayload(slot, 99, 1, false)));
+        assertFalse(MiningNetworking.select(player, new MiningSelectionPayload(slot, 0, 99, false)));
+        assertFalse(MiningNetworking.select(player, new MiningSelectionPayload(slot, MiningMode.VEIN.ordinal(), 1, true)));
+        assertTrue(MiningNetworking.select(player, new MiningSelectionPayload(slot, MiningMode.FAST.ordinal(), 2, true)));
+        assertEquals(MiningMode.FAST, MiningItem.mode(tool));
+        assertEquals(2, MiningItem.radius(tool));
+        assertTrue(MiningItem.veinMining(tool));
+        assertTrue(MiningNetworking.select(player, new MiningSelectionPayload(slot, MiningMode.SLOW.ordinal(), 1, false)));
+        assertEquals(MiningMode.SLOW, MiningItem.mode(tool));
+        assertFalse(MiningItem.veinMining(tool));
         BlockPos center = helper.absolutePos(new BlockPos(3, 8, 3));
         for (BlockPos pos : MiningOperation.area(center, net.minecraft.core.Direction.UP, 1)) {
             helper.getLevel().setBlockAndUpdate(pos, Blocks.DIRT.defaultBlockState());
@@ -136,7 +228,7 @@ public final class DisassemblerTest {
             assertTrue(helper.getLevel().getBlockState(pos).isAir());
         }
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(net.minecraft.world.item.Items.STICK));
-        assertFalse(MiningNetworking.select(player, new MiningSelectionPayload(slot, 0, 1)));
+        assertFalse(MiningNetworking.select(player, new MiningSelectionPayload(slot, 0, 1, false)));
     }
 
     @SharedGameTest("disassembler_weapon_live_charge")

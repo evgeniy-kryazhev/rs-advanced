@@ -95,7 +95,7 @@ public final class MiningNetworking {
             return false;
         }
         MiningMode mode = MiningMode.values()[payload.mode()];
-        if (mode == MiningMode.VEIN && !MiningBalance.settings().veinEnabled()) {
+        if (mode == MiningMode.VEIN || (payload.vein() && !MiningBalance.settings().veinEnabled())) {
             return false;
         }
         var stack = payload.slot().resolve(player).orElse(ItemStack.EMPTY);
@@ -105,6 +105,7 @@ public final class MiningNetworking {
         MiningItem.prepare(stack);
         MiningItem.setMode(stack, mode);
         MiningItem.setRadius(stack, payload.radius());
+        MiningItem.setVeinMining(stack, payload.vein());
         player.getInventory().setChanged();
         return true;
     }

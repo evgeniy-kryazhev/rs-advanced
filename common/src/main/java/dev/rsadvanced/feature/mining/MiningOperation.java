@@ -13,6 +13,8 @@ import dev.rsadvanced.feature.connection.NetworkCardSlot;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.function.BooleanSupplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -39,7 +41,7 @@ public final class MiningOperation {
         }
         MiningItem.prepare(tool);
         MiningMode mode = MiningItem.mode(tool);
-        if (mode == MiningMode.OFF || (mode == MiningMode.VEIN && !MiningBalance.settings().veinEnabled())) {
+        if (mode == MiningMode.OFF) {
             return false;
         }
         ServerLevel level = player.serverLevel();
@@ -54,51 +56,74 @@ public final class MiningOperation {
         var context = new NetworkCardItemContext(player, reference, NetworkCardSlot::card, BuiltinPermission.INSERT);
         Network network = context.connection().orElse(null);
         int radius = player.isCreative() || !player.hasCorrectToolForDrops(state) ? 0 : MiningItem.radius(tool);
-        List<MiningVein.Target> targets;
-        if (mode == MiningMode.VEIN && !player.isCreative()) {
-            targets = MiningVein.find(level, center, state, MiningBalance.settings().veinLimit());
-        } else {
-            targets = area(center, face, radius).stream()
-                    .filter(position -> !position.equals(center))
-                    .map(position -> new MiningVein.Target(position, 1, center)).toList();
-        }
+        List<BlockPos> positions = area(center, face, radius);
+        var seeds = new LinkedHashMap<BlockPos, BlockState>();
         long centerCost = MiningBalance.cost(mode, state.getDestroySpeed(level, center));
         if (!breakOne(player, center, tool, context, network, centerCost, true, original)) {
             return false;
         }
-        for (MiningVein.Target target : targets) {
-            BlockPos candidate = target.position();
-            if (player.getMainHandItem() != tool) {
-                break;
+        seeds.put(center.immutable(), state);
+        for (BlockPos candidate : positions) {
+            if (candidate.equals(center)) {
+                continue;
             }
-            // An operation which began online must stop its expansion if its original route disappears.
-            // An offline operation is self-contained and never requires a card to mine its area.
-            if (network != null && NetworkCardConnection.resolve(player, NetworkCardSlot.card(tool),
-                    BuiltinPermission.INSERT).orElse(null) != network) {
-                break;
+            if (!canExpand(player, tool, network)) {
+                return true;
             }
             if (!level.isLoaded(candidate)) {
                 continue;
             }
             BlockState nextState = level.getBlockState(candidate);
-            if (mode == MiningMode.VEIN && !nextState.is(state.getBlock())) {
-                continue;
-            }
             if (!eligible(player, candidate, nextState, true)) {
                 continue;
             }
-            long cost = mode == MiningMode.VEIN
-                    ? MiningBalance.veinCost(nextState.getDestroySpeed(level, candidate), target.distance())
-                    : MiningBalance.cost(mode, nextState.getDestroySpeed(level, candidate));
+            long cost = MiningBalance.cost(mode, nextState.getDestroySpeed(level, candidate));
+            if (RefinedStorageApi.INSTANCE.isEnergyRequired() && MiningItem.energy(tool) < cost) {
+                return true;
+            }
+            if (breakOne(player, candidate, tool, context, network, cost, false,
+                    () -> player.gameMode.destroyBlock(candidate))) {
+                seeds.put(candidate.immutable(), nextState);
+            }
+        }
+        if (player.isCreative() || !MiningItem.veinMining(tool) || !MiningBalance.settings().veinEnabled()) {
+            return true;
+        }
+        // Only successfully removed area blocks seed veins; protected blocks cannot start expansion.
+        var targets = MiningVein.find(level, seeds, new HashSet<>(positions), MiningBalance.settings().veinLimit());
+        var removed = new HashSet<>(seeds.keySet());
+        for (MiningVein.Target target : targets) {
+            if (!canExpand(player, tool, network)) {
+                break;
+            }
+            BlockPos candidate = target.position();
+            if (!removed.contains(target.parent()) || !level.isLoaded(candidate)) {
+                continue;
+            }
+            BlockState nextState = level.getBlockState(candidate);
+            if (!nextState.is(target.block()) || !eligible(player, candidate, nextState, true)) {
+                continue;
+            }
+            long cost = MiningBalance.veinCost(mode, nextState.getDestroySpeed(level, candidate), target.distance());
             if (RefinedStorageApi.INSTANCE.isEnergyRequired() && MiningItem.energy(tool) < cost) {
                 break;
             }
             if (breakOne(player, candidate, tool, context, network, cost, false,
-                    () -> player.gameMode.destroyBlock(candidate)) && mode == MiningMode.VEIN) {
+                    () -> player.gameMode.destroyBlock(candidate))) {
+                removed.add(candidate);
                 MiningNetworking.sendArc(level, target.parent(), candidate);
             }
         }
         return true;
+    }
+
+    private static boolean canExpand(ServerPlayer player, ItemStack tool, Network network) {
+        if (player.getMainHandItem() != tool) {
+            return false;
+        }
+        // Offline mining is independent of a card; online mining retains its original route.
+        return network == null || NetworkCardConnection.resolve(player, NetworkCardSlot.card(tool),
+                BuiltinPermission.INSERT).orElse(null) == network;
     }
 
     private static boolean eligible(ServerPlayer player, BlockPos pos, BlockState state, boolean expanded) {

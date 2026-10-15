@@ -17,6 +17,11 @@ public final class AdvancedComponents {
                     .networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.fromCodec(
                             MiningMode.CODEC))
                     .build());
+    public static final RegistrySupplier<DataComponentType<Boolean>> MINING_VEIN =
+            COMPONENTS.register("mining_vein", () -> DataComponentType.<Boolean>builder()
+                    .persistent(com.mojang.serialization.Codec.BOOL)
+                    .networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.BOOL)
+                    .build());
     public static final RegistrySupplier<DataComponentType<ResourceLocation>> CELL_DEFINITION =
             COMPONENTS.register("cell_definition", () -> DataComponentType.<ResourceLocation>builder()
                     .persistent(ResourceLocation.CODEC)

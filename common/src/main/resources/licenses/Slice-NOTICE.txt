@@ -1,0 +1,26 @@
+Slice radial menu adaptation
+
+Original project: Slice by ansi-sudo
+Source: https://github.com/ansi-sudo/Slice
+Version: Minecraft 1.21.1 branch, commit 0e81c17eafc67cee8008a199634c8c920594a7e1
+License: Creative Commons Attribution-NonCommercial 4.0 International
+License text: Slice-CC-BY-NC-4.0.txt (in this directory)
+License URL: https://creativecommons.org/licenses/by-nc/4.0/
+
+The following files are adapted from Slice and retain its CC BY-NC 4.0 license:
+- dev/rsadvanced/client/radial/slice/SliceLayout.java
+- dev/rsadvanced/client/radial/slice/SliceRadialScreen.java
+- assets/rsadvanced/textures/gui/slice/radial_slot.png
+- assets/rsadvanced/textures/gui/slice/radial_slot_active.png
+- assets/rsadvanced/textures/gui/slice/radial_slot_hovered.png
+
+Changes by RS Advanced contributors:
+- Replace hotbar selection and global inventory/configuration state with generic menu commands.
+- Limit layout to a full circle and derive radius from the available GUI size.
+- Combine angular selection with inner and outer deadzones.
+- Add command labels, selected/disabled state, live status and validity checks.
+- Use the shared Minecraft screen renderer on Fabric and NeoForge.
+The three original slot textures are unmodified.
+
+These files are exceptions to RS Advanced's general MIT license. The independent
+menu model, provider interface and mining command logic remain under RS Advanced's MIT license.

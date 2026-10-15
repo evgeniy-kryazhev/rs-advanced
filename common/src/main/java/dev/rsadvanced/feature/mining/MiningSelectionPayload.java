@@ -7,15 +7,16 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-public record MiningSelectionPayload(SlotReference slot, int mode, int radius) implements CustomPacketPayload {
+public record MiningSelectionPayload(SlotReference slot, int mode, int radius, boolean vein) implements CustomPacketPayload {
     public static final Type<MiningSelectionPayload> TYPE = new Type<>(RSAdvanced.id("mining_selection"));
     public static final StreamCodec<RegistryFriendlyByteBuf, MiningSelectionPayload> CODEC = StreamCodec.of(
             (buffer, payload) -> {
                 SlotReferenceFactory.STREAM_CODEC.encode(buffer, payload.slot());
                 buffer.writeVarInt(payload.mode());
                 buffer.writeVarInt(payload.radius());
+                buffer.writeBoolean(payload.vein());
             }, buffer -> new MiningSelectionPayload(SlotReferenceFactory.STREAM_CODEC.decode(buffer),
-                    buffer.readVarInt(), buffer.readVarInt()));
+                    buffer.readVarInt(), buffer.readVarInt(), buffer.readBoolean()));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

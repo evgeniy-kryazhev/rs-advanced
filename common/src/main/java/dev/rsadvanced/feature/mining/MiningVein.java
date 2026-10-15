@@ -5,6 +5,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
@@ -15,21 +16,27 @@ import net.minecraft.world.level.block.state.BlockState;
 
 public final class MiningVein {
     public static final TagKey<Block> ORES = TagKey.create(Registries.BLOCK, RSAdvanced.id("mining_ores"));
-    public record Target(BlockPos position, int distance, BlockPos parent) {
+    public record Target(BlockPos position, int distance, BlockPos parent, Block block) {
     }
 
     private MiningVein() {
     }
 
     public static List<Target> find(ServerLevel level, BlockPos origin, BlockState original, int limit) {
-        if (!original.is(ORES)) {
-            return List.of();
-        }
+        return find(level, Map.of(origin.immutable(), original), Set.of(origin.immutable()), limit);
+    }
+
+    public static List<Target> find(ServerLevel level, Map<BlockPos, BlockState> seeds,
+                                    Set<BlockPos> area, int limit) {
         List<Target> result = new ArrayList<>();
         ArrayDeque<Target> frontier = new ArrayDeque<>();
-        Set<BlockPos> visited = new HashSet<>();
-        frontier.add(new Target(origin.immutable(), 0, origin.immutable()));
-        visited.add(origin.immutable());
+        Set<BlockPos> visited = new HashSet<>(area);
+        for (var seed : seeds.entrySet()) {
+            if (seed.getValue().is(ORES)) {
+                frontier.add(new Target(seed.getKey(), 0, seed.getKey(), seed.getValue().getBlock()));
+            }
+        }
+        int discovered = 0;
         while (!frontier.isEmpty() && result.size() < limit) {
             Target current = frontier.removeFirst();
             if (current.distance() > 0) {
@@ -41,13 +48,11 @@ public final class MiningVein {
                 if (visited.contains(position) || !level.isLoaded(position)) {
                     continue;
                 }
-                visited.add(position);
-                if (level.getBlockState(position).is(original.getBlock())) {
-                    frontier.addLast(new Target(position, current.distance() + 1, current.position()));
-                    // Every queued matching block will count towards the bounded result.
-                    if (result.size() + frontier.size() >= limit) {
-                        break;
-                    }
+                if (discovered < limit && level.getBlockState(position).is(current.block())) {
+                    // Mismatches remain available to seeds of other ore types.
+                    visited.add(position);
+                    discovered++;
+                    frontier.addLast(new Target(position, current.distance() + 1, current.position(), current.block()));
                 }
             }
         }
