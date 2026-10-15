@@ -9,7 +9,6 @@ import dev.rsadvanced.feature.mining.MiningArcPayload;
 import dev.rsadvanced.feature.mining.MiningBalance;
 import dev.rsadvanced.feature.mining.MiningConnectionPayload;
 import dev.rsadvanced.feature.mining.MiningItem;
-import dev.rsadvanced.feature.mining.MiningMode;
 import dev.rsadvanced.feature.mining.MiningSettingsPayload;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -96,13 +95,15 @@ public final class MiningClient {
             if (!(stack.getItem() instanceof MiningItem)) {
                 return;
             }
-            MiningMode mode = MiningItem.mode(stack);
-            int size = MiningItem.radius(stack) * 2 + 1;
+            var moduleStatus = Component.empty();
+            for (Component status : MiningItem.modules(stack).status()) {
+                if (!moduleStatus.getSiblings().isEmpty()) {
+                    moduleStatus.append(" | ");
+                }
+                moduleStatus.append(status);
+            }
             Component label = Component.translatable("gui.rsadvanced.mining_hud",
-                    Component.translatable("gui.rsadvanced.mining_mode." + mode.getSerializedName()),
-                    Component.translatable(MiningItem.veinMining(stack)
-                            ? "gui.rsadvanced.mining_vein_on" : "gui.rsadvanced.mining_vein_off"),
-                    size + "×" + size, MiningItem.energy(stack),
+                    moduleStatus, MiningItem.energy(stack),
                     NetworkCardSlot.card(stack).isEmpty()
                             ? Component.translatable("gui.rsadvanced.mining_offline")
                             : Component.translatable(CONNECTED[hand.ordinal()]

@@ -29,7 +29,7 @@ public final class DisassemblerTest {
                 MiningItem.setRadius(tool, radius);
                 MiningItem.setVeinMining(tool, true);
                 player.setItemInHand(InteractionHand.MAIN_HAND, tool);
-                var positions = MiningOperation.area(center, net.minecraft.core.Direction.UP, radius);
+                var positions = dev.rsadvanced.feature.mining.module.ToolModules.AREA.positions(center, net.minecraft.core.Direction.UP, radius);
                 for (BlockPos position : positions) {
                     level.setBlockAndUpdate(position, Blocks.DIRT.defaultBlockState());
                 }
@@ -208,27 +208,32 @@ public final class DisassemblerTest {
         ItemStack tool = MiningContent.ITEM.get().createAtEnergyCapacity();
         player.setItemInHand(InteractionHand.MAIN_HAND, tool);
         var slot = RefinedStorageApi.INSTANCE.createInventorySlotReference(player, InteractionHand.MAIN_HAND);
-        assertFalse(MiningNetworking.select(player, new MiningSelectionPayload(slot, 99, 1, false)));
-        assertFalse(MiningNetworking.select(player, new MiningSelectionPayload(slot, 0, 99, false)));
-        assertFalse(MiningNetworking.select(player, new MiningSelectionPayload(slot, MiningMode.VEIN.ordinal(), 1, true)));
-        assertTrue(MiningNetworking.select(player, new MiningSelectionPayload(slot, MiningMode.FAST.ordinal(), 2, true)));
+        assertFalse(MiningNetworking.select(player, new MiningSelectionPayload(slot, dev.rsadvanced.RSAdvanced.id("unknown"), "normal")));
+        assertFalse(MiningNetworking.select(player, new MiningSelectionPayload(slot, dev.rsadvanced.RSAdvanced.id("area"), "99")));
+        assertFalse(MiningNetworking.select(player, new MiningSelectionPayload(slot, dev.rsadvanced.RSAdvanced.id("speed"), "vein")));
+        assertTrue(MiningNetworking.select(player, new MiningSelectionPayload(slot, dev.rsadvanced.RSAdvanced.id("speed"), "fast")));
+        assertTrue(MiningNetworking.select(player, new MiningSelectionPayload(slot, dev.rsadvanced.RSAdvanced.id("area"), "5")));
+        assertTrue(MiningNetworking.select(player, new MiningSelectionPayload(slot, dev.rsadvanced.RSAdvanced.id("vein"), "toggle")));
         assertEquals(MiningMode.FAST, MiningItem.mode(tool));
         assertEquals(2, MiningItem.radius(tool));
         assertTrue(MiningItem.veinMining(tool));
-        assertTrue(MiningNetworking.select(player, new MiningSelectionPayload(slot, MiningMode.SLOW.ordinal(), 1, false)));
+        assertTrue(MiningNetworking.select(player, new MiningSelectionPayload(slot, dev.rsadvanced.RSAdvanced.id("speed"), "slow")));
+        assertTrue(MiningNetworking.select(player, new MiningSelectionPayload(slot, dev.rsadvanced.RSAdvanced.id("area"), "3")));
+        assertTrue(MiningItem.veinMining(tool));
+        assertTrue(MiningNetworking.select(player, new MiningSelectionPayload(slot, dev.rsadvanced.RSAdvanced.id("vein"), "toggle")));
         assertEquals(MiningMode.SLOW, MiningItem.mode(tool));
         assertFalse(MiningItem.veinMining(tool));
         BlockPos center = helper.absolutePos(new BlockPos(3, 8, 3));
-        for (BlockPos pos : MiningOperation.area(center, net.minecraft.core.Direction.UP, 1)) {
+        for (BlockPos pos : dev.rsadvanced.feature.mining.module.ToolModules.AREA.positions(center, net.minecraft.core.Direction.UP, 1)) {
             helper.getLevel().setBlockAndUpdate(pos, Blocks.DIRT.defaultBlockState());
         }
         assertTrue(player.gameMode.destroyBlock(center));
         assertEquals(MiningItem.CAPACITY - 9 * 32, MiningItem.energy(tool));
-        for (BlockPos pos : MiningOperation.area(center, net.minecraft.core.Direction.UP, 1)) {
+        for (BlockPos pos : dev.rsadvanced.feature.mining.module.ToolModules.AREA.positions(center, net.minecraft.core.Direction.UP, 1)) {
             assertTrue(helper.getLevel().getBlockState(pos).isAir());
         }
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(net.minecraft.world.item.Items.STICK));
-        assertFalse(MiningNetworking.select(player, new MiningSelectionPayload(slot, 0, 1, false)));
+        assertFalse(MiningNetworking.select(player, new MiningSelectionPayload(slot, dev.rsadvanced.RSAdvanced.id("speed"), "normal")));
     }
 
     @SharedGameTest("disassembler_weapon_live_charge")

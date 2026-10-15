@@ -1,10 +1,8 @@
 package dev.rsadvanced.feature.mining;
 
-import com.refinedmods.refinedstorage.common.api.RefinedStorageApi;
+import dev.rsadvanced.feature.mining.module.ToolModules;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 public final class MiningCombat {
@@ -12,13 +10,12 @@ public final class MiningCombat {
     }
 
     public static AttributeModifier damageModifier(ItemStack stack) {
-        long energy = RefinedStorageApi.INSTANCE.isEnergyRequired() ? MiningItem.energy(stack) : Long.MAX_VALUE;
-        return new AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID, MiningBalance.damage(energy),
-                AttributeModifier.Operation.ADD_VALUE);
+        var modules = MiningItem.modules(stack);
+        return modules.require(ToolModules.COMBAT).damageModifier(modules);
     }
 
     public static AttributeModifier speedModifier() {
-        return new AttributeModifier(Item.BASE_ATTACK_SPEED_ID, -2.4, AttributeModifier.Operation.ADD_VALUE);
+        return ToolModules.COMBAT.speedModifier();
     }
 
     public static void prepareAttack(Player player) {
@@ -26,17 +23,10 @@ public final class MiningCombat {
         if (!(stack.getItem() instanceof MiningItem)) {
             return;
         }
+        var modules = MiningItem.modules(stack);
         if (!player.level().isClientSide()) {
-            MiningItem.prepare(stack);
+            modules.prepare();
         }
-        var damage = player.getAttribute(Attributes.ATTACK_DAMAGE);
-        var speed = player.getAttribute(Attributes.ATTACK_SPEED);
-        if (damage != null && speed != null) {
-            // Update before the actual damage calculation, without touching modifiers from other sources.
-            damage.removeModifier(Item.BASE_ATTACK_DAMAGE_ID);
-            damage.addTransientModifier(damageModifier(stack));
-            speed.removeModifier(Item.BASE_ATTACK_SPEED_ID);
-            speed.addTransientModifier(speedModifier());
-        }
+        modules.beforeAttack(player);
     }
 }

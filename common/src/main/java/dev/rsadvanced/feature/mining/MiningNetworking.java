@@ -91,21 +91,13 @@ public final class MiningNetworking {
     }
 
     public static boolean select(ServerPlayer player, MiningSelectionPayload payload) {
-        if (payload.mode() < 0 || payload.mode() >= MiningMode.values().length || payload.radius() < 0 || payload.radius() > 2) {
-            return false;
-        }
-        MiningMode mode = MiningMode.values()[payload.mode()];
-        if (mode == MiningMode.VEIN || (payload.vein() && !MiningBalance.settings().veinEnabled())) {
-            return false;
-        }
         var stack = payload.slot().resolve(player).orElse(ItemStack.EMPTY);
         if (!(stack.getItem() instanceof MiningItem) || (stack != player.getMainHandItem() && stack != player.getOffhandItem())) {
             return false;
         }
-        MiningItem.prepare(stack);
-        MiningItem.setMode(stack, mode);
-        MiningItem.setRadius(stack, payload.radius());
-        MiningItem.setVeinMining(stack, payload.vein());
+        if (!MiningItem.modules(stack).select(payload.module(), payload.option())) {
+            return false;
+        }
         player.getInventory().setChanged();
         return true;
     }

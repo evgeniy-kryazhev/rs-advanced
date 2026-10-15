@@ -74,7 +74,7 @@
   "gui.rsadvanced.mining_vein": "Vein",
   "gui.rsadvanced.mining_vein_on": "Vein: on",
   "gui.rsadvanced.mining_vein_off": "Vein: off",
-  "gui.rsadvanced.mining_hud": "%s | %s | %s | %s FE | %s",
+  "gui.rsadvanced.mining_hud": "%s | %s FE | %s",
   "gui.rsadvanced.mining_offline": "No card",
   "gui.rsadvanced.mining_connected": "RS connected",
   "gui.rsadvanced.mining_unavailable": "RS unavailable",

@@ -104,7 +104,7 @@ public final class MiningOperationTest {
             var storage = fixture.network.getComponent(StorageNetworkComponent.class);
             storage.addSource(new LimitedStorageImpl(100));
             BlockPos center = helper.absolutePos(new BlockPos(3, 8, 3));
-            var positions = MiningOperation.area(center, Direction.UP, 1);
+            var positions = dev.rsadvanced.feature.mining.module.ToolModules.AREA.positions(center, Direction.UP, 1);
             var materials = List.of(Blocks.DIRT, Blocks.STONE, Blocks.OAK_LOG, Blocks.HAY_BLOCK,
                     Blocks.GLASS, Blocks.WHITE_WOOL, Blocks.COBWEB, Blocks.SAND, Blocks.OBSIDIAN);
             for (int index = 0; index < materials.size(); index++) {
@@ -145,7 +145,7 @@ public final class MiningOperationTest {
             var ordinary = new LimitedStorageImpl(100);
             storage.addSource(ordinary);
             BlockPos center = helper.absolutePos(new BlockPos(3, 8, 3));
-            var area = MiningOperation.area(center, Direction.UP, 2);
+            var area = dev.rsadvanced.feature.mining.module.ToolModules.AREA.positions(center, Direction.UP, 2);
             for (BlockPos pos : area) {
                 fixture.level.setBlockAndUpdate(pos, Blocks.STONE.defaultBlockState());
             }
@@ -198,7 +198,7 @@ public final class MiningOperationTest {
             var storage = fixture.network.getComponent(StorageNetworkComponent.class);
             storage.addSource(new LimitedStorageImpl(4));
             BlockPos center = helper.absolutePos(new BlockPos(3, 8, 3));
-            var area = MiningOperation.area(center, Direction.UP, 1);
+            var area = dev.rsadvanced.feature.mining.module.ToolModules.AREA.positions(center, Direction.UP, 1);
             for (BlockPos pos : area) {
                 fixture.level.setBlockAndUpdate(pos, Blocks.STONE.defaultBlockState());
             }
@@ -256,7 +256,7 @@ public final class MiningOperationTest {
         assertEquals(MiningItem.CAPACITY - MiningItem.BLOCK_COST,
                 RefinedStorageApi.INSTANCE.getEnergyStorage(tool).orElseThrow().getStored());
         for (Direction direction : Direction.values()) {
-            List<BlockPos> area = MiningOperation.area(center, direction, 2);
+            List<BlockPos> area = dev.rsadvanced.feature.mining.module.ToolModules.AREA.positions(center, direction, 2);
             assertEquals(25, area.size());
             assertEquals(center, area.getFirst());
             assertEquals(25, area.stream().distinct().count());

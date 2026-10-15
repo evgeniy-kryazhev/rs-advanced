@@ -74,7 +74,7 @@
   "gui.rsadvanced.mining_vein": "Жила",
   "gui.rsadvanced.mining_vein_on": "Жила: вкл.",
   "gui.rsadvanced.mining_vein_off": "Жила: выкл.",
-  "gui.rsadvanced.mining_hud": "%s | %s | %s | %s FE | %s",
+  "gui.rsadvanced.mining_hud": "%s | %s FE | %s",
   "gui.rsadvanced.mining_offline": "Без карты",
   "gui.rsadvanced.mining_connected": "RS подключена",
   "gui.rsadvanced.mining_unavailable": "RS недоступна",
