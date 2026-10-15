@@ -1,7 +1,6 @@
 package dev.rsadvanced.feature.mining;
 
 import dev.rsadvanced.feature.mining.module.ToolMiningSession;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import net.minecraft.core.BlockPos;
@@ -14,6 +13,7 @@ import net.minecraft.world.item.ItemStack;
 /** Coordinates module phases around vanilla destruction; feature rules belong to the installed modules. */
 public final class MiningOperation {
     private static final ThreadLocal<ActiveBlock> ACTIVE = new ThreadLocal<>();
+    private static final ThreadLocal<VanillaCall> VANILLA_CALL = new ThreadLocal<>();
 
     private enum Result {
         REMOVED, SKIPPED, STOP
@@ -24,7 +24,14 @@ public final class MiningOperation {
 
     public static boolean destroy(ServerPlayer player, BlockPos center, Direction face, BooleanSupplier original) {
         ItemStack tool = player.getMainHandItem();
-        if (!(tool.getItem() instanceof MiningItem) || ACTIVE.get() != null) {
+        VanillaCall delegated = VANILLA_CALL.get();
+        if (delegated != null && delegated.context().player() == player
+                && delegated.context().ownsTool() && delegated.position().equals(center)) {
+            // Consume the delegation before vanilla runs: callbacks must start independent operations.
+            VANILLA_CALL.remove();
+            return original.getAsBoolean();
+        }
+        if (!(tool.getItem() instanceof MiningItem)) {
             return original.getAsBoolean();
         }
         var modules = MiningItem.modules(tool);
@@ -38,24 +45,35 @@ public final class MiningOperation {
             return false;
         }
         for (var module : modules.installed()) {
-            List<MiningTarget> targets = new ArrayList<>();
-            // Reserve the whole phase before executing it. Later modules cannot schedule these blocks twice.
             for (MiningTarget target : module.miningTargets(context)) {
-                if (context.plan(target.position())) {
-                    targets.add(target);
+                // A module may discover its next targets from the preceding successful removals.
+                if (!context.plan(target.position())) {
+                    continue;
                 }
-            }
-            for (MiningTarget target : targets) {
                 if (!canContinue(context, sessions)) {
                     return true;
                 }
                 if (breakOne(context, sessions, target, false,
-                        () -> player.gameMode.destroyBlock(target.position())) == Result.STOP) {
+                        () -> destroyAdditionalBlock(context, target.position())) == Result.STOP) {
                     return true;
                 }
             }
         }
         return true;
+    }
+
+    private static boolean destroyAdditionalBlock(MiningContext context, BlockPos position) {
+        VanillaCall previous = VANILLA_CALL.get();
+        VANILLA_CALL.set(new VanillaCall(context, position));
+        try {
+            return context.player().gameMode.destroyBlock(position);
+        } finally {
+            if (previous == null) {
+                VANILLA_CALL.remove();
+            } else {
+                VANILLA_CALL.set(previous);
+            }
+        }
     }
 
     private static boolean canContinue(MiningContext context, List<ToolMiningSession> sessions) {
@@ -83,6 +101,7 @@ public final class MiningOperation {
             if (!canContinue(context, sessions)) {
                 return Result.STOP;
             }
+            ActiveBlock previous = ACTIVE.get();
             ACTIVE.set(new ActiveBlock(context, position, sessions));
             try {
                 boolean result = original.getAsBoolean();
@@ -97,7 +116,11 @@ public final class MiningOperation {
                 }
                 return Result.SKIPPED;
             } finally {
-                ACTIVE.remove();
+                if (previous == null) {
+                    ACTIVE.remove();
+                } else {
+                    ACTIVE.set(previous);
+                }
                 // Include mutations made before an exception, so modules never refund an already removed block.
                 transaction.removed(level.getBlockState(position) != before);
             }
@@ -115,5 +138,8 @@ public final class MiningOperation {
     }
 
     private record ActiveBlock(MiningContext context, BlockPos position, List<ToolMiningSession> sessions) {
+    }
+
+    private record VanillaCall(MiningContext context, BlockPos position) {
     }
 }

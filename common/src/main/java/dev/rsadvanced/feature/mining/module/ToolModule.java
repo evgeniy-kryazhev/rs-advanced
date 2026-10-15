@@ -38,7 +38,8 @@ public interface ToolModule {
         return currentCost;
     }
 
-    default List<MiningTarget> miningTargets(MiningContext context) {
+    /** The coordinator finishes each yielded block before requesting the next; do not collect lazy targets upfront. */
+    default Iterable<MiningTarget> miningTargets(MiningContext context) {
         return List.of();
     }
 

@@ -41,5 +41,9 @@ class MiningBalanceTest {
         assertThrows(IllegalArgumentException.class, () -> new MiningSettings(0, 2000, 4, 800, 128, true));
         assertThrows(IllegalArgumentException.class, () -> new MiningSettings(400000, 2000, 4, 800, 5000, true));
         assertThrows(ArithmeticException.class, () -> new MiningSettings(400000, 2000, Long.MAX_VALUE, 800, 128, true));
+        assertThrows(IllegalArgumentException.class,
+                () -> new MiningSettings(Long.MAX_VALUE, 2000, 1_000_000_000_000L, 800, 4096, true));
+        assertDoesNotThrow(
+                () -> new MiningSettings(Long.MAX_VALUE, 2000, 100_000_000_000L, 800, 4096, true));
     }
 }

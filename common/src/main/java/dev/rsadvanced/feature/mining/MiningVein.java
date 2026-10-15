@@ -4,9 +4,12 @@ import dev.rsadvanced.RSAdvanced;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
@@ -29,19 +32,62 @@ public final class MiningVein {
     public static List<Target> find(ServerLevel level, Map<BlockPos, BlockState> seeds,
                                     Set<BlockPos> area, int limit) {
         List<Target> result = new ArrayList<>();
-        ArrayDeque<Target> frontier = new ArrayDeque<>();
-        Set<BlockPos> visited = new HashSet<>(area);
-        for (var seed : seeds.entrySet()) {
-            if (seed.getValue().is(ORES)) {
-                frontier.add(new Target(seed.getKey(), 0, seed.getKey(), seed.getValue().getBlock()));
+        for (Target target : traverse(level, seeds, area, limit, ignored -> true)) {
+            result.add(target);
+        }
+        return result;
+    }
+
+    /** Expand only successfully mined blocks; a denied branch must not claim another branch's descendants. */
+    public static Iterable<Target> traverse(ServerLevel level, Map<BlockPos, BlockState> seeds,
+                                            Set<BlockPos> area, int limit, Predicate<Target> wasMined) {
+        return () -> new Traversal(level, seeds, area, limit, wasMined);
+    }
+
+    private static final class Traversal implements Iterator<Target> {
+        private final ServerLevel level;
+        private final int limit;
+        private final Predicate<Target> wasMined;
+        private final ArrayDeque<Target> frontier = new ArrayDeque<>();
+        private final Set<BlockPos> visited;
+        private Target previous;
+        private int discovered;
+
+        private Traversal(ServerLevel level, Map<BlockPos, BlockState> seeds, Set<BlockPos> area,
+                          int limit, Predicate<Target> wasMined) {
+            this.level = level;
+            this.limit = limit;
+            this.wasMined = wasMined;
+            visited = new HashSet<>(area);
+            for (var seed : seeds.entrySet()) {
+                if (seed.getValue().is(ORES)) {
+                    expand(new Target(seed.getKey(), 0, seed.getKey(), seed.getValue().getBlock()));
+                }
             }
         }
-        int discovered = 0;
-        while (!frontier.isEmpty() && result.size() < limit) {
-            Target current = frontier.removeFirst();
-            if (current.distance() > 0) {
-                result.add(current);
+
+        @Override
+        public boolean hasNext() {
+            if (previous != null) {
+                Target completed = previous;
+                previous = null;
+                if (wasMined.test(completed)) {
+                    expand(completed);
+                }
             }
+            return !frontier.isEmpty();
+        }
+
+        @Override
+        public Target next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            previous = frontier.removeFirst();
+            return previous;
+        }
+
+        private void expand(Target current) {
             for (BlockPos neighbor : BlockPos.betweenClosed(current.position().offset(-1, -1, -1),
                     current.position().offset(1, 1, 1))) {
                 BlockPos position = neighbor.immutable();
@@ -56,6 +102,5 @@ public final class MiningVein {
                 }
             }
         }
-        return result;
     }
 }

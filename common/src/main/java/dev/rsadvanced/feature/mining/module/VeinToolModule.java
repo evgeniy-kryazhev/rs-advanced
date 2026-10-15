@@ -8,6 +8,7 @@ import dev.rsadvanced.feature.mining.MiningTarget;
 import dev.rsadvanced.feature.mining.MiningNetworking;
 import dev.rsadvanced.feature.mining.MiningMode;
 import dev.rsadvanced.feature.mining.MiningVein;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,17 +55,33 @@ public final class VeinToolModule implements ToolModule {
     }
 
     @Override
-    public List<MiningTarget> miningTargets(MiningContext context) {
-        if (context.player().isCreative()) {
+    public Iterable<MiningTarget> miningTargets(MiningContext context) {
+        if (context.player().isCreative() || !active(context.tool())) {
             return List.of();
         }
-        return targets(context.modules(), context.level(), context.removedBlocks(), context.plannedPositions()).stream()
-                .map(target -> new MiningTarget(target.position(),
+        var traversal = MiningVein.traverse(context.level(), context.removedBlocks(), context.plannedPositions(),
+                MiningBalance.settings().veinLimit(), target -> {
+                    BlockState removed = context.removedBlocks().get(target.position());
+                    return removed != null && removed.is(target.block());
+                });
+        return () -> new Iterator<>() {
+            private final Iterator<MiningVein.Target> targets = traversal.iterator();
+
+            @Override
+            public boolean hasNext() {
+                return targets.hasNext();
+            }
+
+            @Override
+            public MiningTarget next() {
+                MiningVein.Target target = targets.next();
+                return new MiningTarget(target.position(),
                         () -> context.removedBlocks().containsKey(target.parent()),
                         state -> state.is(target.block()),
                         state -> cost(context.modules(), state.getDestroySpeed(context.level(), target.position()), target.distance()),
-                        () -> MiningNetworking.sendArc(context.level(), target.parent(), target.position())))
-                .toList();
+                        () -> MiningNetworking.sendArc(context.level(), target.parent(), target.position()));
+            }
+        };
     }
 
     @Override
