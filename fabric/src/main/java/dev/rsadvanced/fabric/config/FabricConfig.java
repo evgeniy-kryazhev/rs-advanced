@@ -36,7 +36,7 @@ public final class FabricConfig implements ConfigData {
         return new RSAdvancedConfig(anchor.baseCost, anchor.chunkCostMultiplier, anchor.maxChunks,
                 anchor.randomTicks, anchor.visualizationDistance,
                 new dev.rsadvanced.config.MiningSettings(mining.capacity, mining.chargeRate, mining.baseCost,
-                        mining.weaponCost, mining.veinLimit, mining.veinEnabled));
+                        mining.veinLimit, mining.veinEnabled));
     }
 
     @Override
@@ -55,8 +55,6 @@ public final class FabricConfig implements ConfigData {
         public long chargeRate = 2_000;
         @ConfigEntry.Gui.RequiresRestart
         public long baseCost = 4;
-        @ConfigEntry.Gui.RequiresRestart
-        public long weaponCost = 800;
         @ConfigEntry.Gui.RequiresRestart
         public int veinLimit = 128;
         @ConfigEntry.Gui.RequiresRestart

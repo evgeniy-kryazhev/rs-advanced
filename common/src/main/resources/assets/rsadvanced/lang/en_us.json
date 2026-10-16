@@ -106,8 +106,6 @@
   "rsadvanced.configuration.mining.chargeRate": "Maximum charge per operation (FE)",
   "text.autoconfig.rsadvanced.option.mining.baseCost": "Base cost per speed unit (FE)",
   "rsadvanced.configuration.mining.baseCost": "Base cost per speed unit (FE)",
-  "text.autoconfig.rsadvanced.option.mining.weaponCost": "Energy per hit (FE)",
-  "rsadvanced.configuration.mining.weaponCost": "Energy per hit (FE)",
   "text.autoconfig.rsadvanced.option.mining.veinLimit": "Maximum additional vein blocks",
   "rsadvanced.configuration.mining.veinLimit": "Maximum additional vein blocks",
   "text.autoconfig.rsadvanced.option.mining.veinEnabled": "Enable vein mining",

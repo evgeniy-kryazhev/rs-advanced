@@ -9,8 +9,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.block.state.BlockState;
@@ -53,12 +51,6 @@ public interface ToolModule {
 
     default void afterBlockMined(ToolModuleContainer container, ServerPlayer player,
                                  BlockPos position, BlockState originalState) {
-    }
-
-    default void hurtEnemy(ToolModuleContainer container, LivingEntity target, LivingEntity attacker) {
-    }
-
-    default void beforeAttack(ToolModuleContainer container, Player player) {
     }
 
     default InteractionResult use(ToolModuleContainer container, ServerPlayer player, SlotReference reference) {

@@ -9,7 +9,6 @@ public final class NeoForgeConfig {
     private final ModConfigSpec.LongValue miningCapacity;
     private final ModConfigSpec.LongValue miningChargeRate;
     private final ModConfigSpec.LongValue miningBaseCost;
-    private final ModConfigSpec.LongValue miningWeaponCost;
     private final ModConfigSpec.IntValue miningVeinLimit;
     private final ModConfigSpec.BooleanValue miningVeinEnabled;
     private final ModConfigSpec.LongValue baseCost;
@@ -51,7 +50,6 @@ public final class NeoForgeConfig {
         miningCapacity = builder.worldRestart().defineInRange("capacity", 400_000L, 1L, Long.MAX_VALUE);
         miningChargeRate = builder.worldRestart().defineInRange("chargeRate", 2_000L, 1L, Long.MAX_VALUE);
         miningBaseCost = builder.worldRestart().defineInRange("baseCost", 4L, 1L, Long.MAX_VALUE / 128);
-        miningWeaponCost = builder.worldRestart().defineInRange("weaponCost", 800L, 1L, Long.MAX_VALUE);
         miningVeinLimit = builder.worldRestart().defineInRange("veinLimit", 128, 1, 4096);
         miningVeinEnabled = builder.worldRestart().define("veinEnabled", true);
         builder.pop();
@@ -67,6 +65,6 @@ public final class NeoForgeConfig {
         return new RSAdvancedConfig(baseCost.get(), chunkCostMultiplier.get(), maxChunks.get(),
                 randomTicks.get(), visualizationDistance.get(),
                 new dev.rsadvanced.config.MiningSettings(miningCapacity.get(), miningChargeRate.get(), miningBaseCost.get(),
-                        miningWeaponCost.get(), miningVeinLimit.get(), miningVeinEnabled.get()));
+                        miningVeinLimit.get(), miningVeinEnabled.get()));
     }
 }

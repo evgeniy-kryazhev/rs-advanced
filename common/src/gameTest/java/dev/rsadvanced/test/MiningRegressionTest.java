@@ -163,13 +163,13 @@ public final class MiningRegressionTest {
     public static void rejectsOverflowingFastCostsAndCalculatesSupportedCosts() {
         boolean rejected = false;
         try {
-            new MiningSettings(Long.MAX_VALUE, 2000, 1_000_000_000_000L, 800, 4096, true);
+            new MiningSettings(Long.MAX_VALUE, 2000, 1_000_000_000_000L, 4096, true);
         } catch (IllegalArgumentException exception) {
             rejected = true;
         }
         assertTrue(rejected);
         var original = RSAdvancedConfig.get();
-        var supported = new MiningSettings(Long.MAX_VALUE, 2000, 100_000_000_000L, 800, 4096, true);
+        var supported = new MiningSettings(Long.MAX_VALUE, 2000, 100_000_000_000L, 4096, true);
         try {
             RSAdvancedConfig.load(() -> new RSAdvancedConfig(original.anchorBaseCost(),
                     original.anchorChunkCostMultiplier(), original.anchorMaxChunks(), original.anchorRandomTicks(),

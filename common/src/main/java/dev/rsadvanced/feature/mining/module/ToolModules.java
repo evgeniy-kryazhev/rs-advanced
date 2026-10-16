@@ -9,9 +9,8 @@ public final class ToolModules {
     public static final SpeedToolModule SPEED = new SpeedToolModule();
     public static final AreaToolModule AREA = new AreaToolModule();
     public static final VeinToolModule VEIN = new VeinToolModule();
-    public static final CombatToolModule COMBAT = new CombatToolModule();
     public static final NetworkToolModule NETWORK = new NetworkToolModule();
-    public static final List<ToolModule> BUILT_IN = List.of(ENERGY, HARVEST, SPEED, AREA, VEIN, COMBAT, NETWORK);
+    public static final List<ToolModule> BUILT_IN = List.of(ENERGY, HARVEST, SPEED, AREA, VEIN, NETWORK);
 
     private ToolModules() {
     }

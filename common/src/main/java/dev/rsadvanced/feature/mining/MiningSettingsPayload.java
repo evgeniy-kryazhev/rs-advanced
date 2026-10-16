@@ -14,11 +14,10 @@ public record MiningSettingsPayload(MiningSettings settings) implements CustomPa
                 buffer.writeVarLong(settings.capacity());
                 buffer.writeVarLong(settings.chargeRate());
                 buffer.writeVarLong(settings.baseCost());
-                buffer.writeVarLong(settings.weaponCost());
                 buffer.writeVarInt(settings.veinLimit());
                 buffer.writeBoolean(settings.veinEnabled());
             }, buffer -> new MiningSettingsPayload(new MiningSettings(buffer.readVarLong(), buffer.readVarLong(),
-                    buffer.readVarLong(), buffer.readVarLong(), buffer.readVarInt(), buffer.readBoolean())));
+                    buffer.readVarLong(), buffer.readVarInt(), buffer.readBoolean())));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

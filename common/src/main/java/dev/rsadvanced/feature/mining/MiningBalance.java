@@ -51,8 +51,4 @@ public final class MiningBalance {
         }
         return available >= required ? mode.speed() : (float) (20.0 * available / required);
     }
-
-    public static double damage(long available) {
-        return 4 + 16 * Math.min(1.0, (double) available / settings().weaponCost());
-    }
 }

@@ -1,12 +1,12 @@
 package dev.rsadvanced.config;
 
 /** FE equivalents of Mekanism 10.7 defaults (2.5 joules per FE). */
-public record MiningSettings(long capacity, long chargeRate, long baseCost, long weaponCost,
+public record MiningSettings(long capacity, long chargeRate, long baseCost,
                              int veinLimit, boolean veinEnabled) {
-    public static final MiningSettings DEFAULT = new MiningSettings(400_000, 2_000, 4, 800, 128, true);
+    public static final MiningSettings DEFAULT = new MiningSettings(400_000, 2_000, 4, 128, true);
 
     public MiningSettings {
-        if (capacity < 1 || chargeRate < 1 || baseCost < 1 || weaponCost < 1 || veinLimit < 1 || veinLimit > 4096) {
+        if (capacity < 1 || chargeRate < 1 || baseCost < 1 || veinLimit < 1 || veinLimit > 4096) {
             throw new IllegalArgumentException("Mining energy values must be positive and veinLimit must be 1..4096");
         }
         long maximumBlockCost = Math.multiplyExact(baseCost, 128);

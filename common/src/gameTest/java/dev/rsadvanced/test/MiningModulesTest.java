@@ -63,7 +63,7 @@ public final class MiningModulesTest {
         ItemStack first = MiningContent.ITEM.get().createAtEnergyCapacity();
         ItemStack second = MiningContent.ITEM.get().createAtEnergyCapacity();
         var modules = MiningItem.modules(first);
-        assertEquals(7, modules.installed().size());
+        assertEquals(6, modules.installed().size());
         assertEquals(8, modules.installed().stream().mapToInt(module -> module.options(modules).size()).sum());
         for (ToolModule module : ToolModules.BUILT_IN) {
             assertTrue(modules.find(module.id()).orElseThrow() == module);
@@ -81,7 +81,7 @@ public final class MiningModulesTest {
         assertEquals(MiningItem.CAPACITY, MiningItem.energy(second));
         assertTrue(modules.select(ToolModules.SPEED.id(), "off"));
         assertFalse(modules.canMine());
-        assertEquals(7, modules.installed().size());
+        assertEquals(6, modules.installed().size());
         assertTrue(MiningItem.veinMining(first));
         assertEquals(2, MiningItem.radius(first));
     }
@@ -106,7 +106,7 @@ public final class MiningModulesTest {
         assertEquals(12345, MiningItem.energy(restored));
         assertTrue(ItemStack.matches(card, NetworkCardSlot.card(restored)));
         assertEquals("preserved", restored.get(DataComponents.CUSTOM_DATA).copyTag().getString("unrelated"));
-        assertEquals(7, MiningItem.modules(restored).installed().size());
+        assertEquals(6, MiningItem.modules(restored).installed().size());
     }
 
     @SharedGameTest("mining_modules_server_command_validation")
@@ -132,7 +132,7 @@ public final class MiningModulesTest {
     @SharedGameTest("mining_modules_extension_dispatch")
     public static void additionalModuleParticipatesWithoutChangingTheItemOrMenu(GameTestHelper helper) {
         ItemStack tool = MiningContent.ITEM.get().createAtEnergyCapacity();
-        int[] calls = new int[5];
+        int[] calls = new int[3];
         ToolModule extension = new ToolModule() {
             @Override
             public ResourceLocation id() {
@@ -158,27 +158,16 @@ public final class MiningModulesTest {
             }
 
             @Override
-            public void hurtEnemy(ToolModuleContainer container, net.minecraft.world.entity.LivingEntity target,
-                                  net.minecraft.world.entity.LivingEntity attacker) {
-                calls[1]++;
-            }
-
-            @Override
             public void afterBlockMined(ToolModuleContainer container, net.minecraft.server.level.ServerPlayer player,
                                         BlockPos position, net.minecraft.world.level.block.state.BlockState state) {
-                calls[2]++;
+                calls[1]++;
             }
 
             @Override
             public InteractionResult use(ToolModuleContainer container, net.minecraft.server.level.ServerPlayer player,
                                          com.refinedmods.refinedstorage.common.api.support.slotreference.SlotReference reference) {
-                calls[3]++;
+                calls[2]++;
                 return InteractionResult.SUCCESS;
-            }
-
-            @Override
-            public void beforeAttack(ToolModuleContainer container, net.minecraft.world.entity.player.Player player) {
-                calls[4]++;
             }
         };
         List<ToolModule> loadout = new ArrayList<>(ToolModules.BUILT_IN);
@@ -189,20 +178,16 @@ public final class MiningModulesTest {
         assertFalse(container.select(extension.id(), "blocked"));
         assertEquals(40.0f, container.miningSpeed(Blocks.STONE.defaultBlockState()));
         var player = MiningOperationTest.survivalPlayer(helper);
-        container.hurtEnemy(player, player);
         container.afterBlockMined(player, helper.absolutePos(new BlockPos(3, 8, 3)), Blocks.STONE.defaultBlockState());
-        container.beforeAttack(player);
         var reference = com.refinedmods.refinedstorage.common.api.RefinedStorageApi.INSTANCE
                 .createInventorySlotReference(player, InteractionHand.MAIN_HAND);
         assertEquals(InteractionResult.SUCCESS, container.use(player, reference));
         assertEquals(1, calls[0]);
         assertEquals(1, calls[1]);
         assertEquals(1, calls[2]);
-        assertEquals(1, calls[3]);
-        assertEquals(1, calls[4]);
         // The extension handled the click before the network module's card-menu fallback.
         assertTrue(player.containerMenu == player.inventoryMenu);
-        assertEquals(8, container.installed().size());
+        assertEquals(7, container.installed().size());
         assertEquals(10, container.installed().stream().mapToInt(module -> module.options(container).size()).sum());
     }
 }

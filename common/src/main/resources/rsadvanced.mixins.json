@@ -14,9 +14,7 @@
     "StorageBlockContainerMenuMixin",
     "MiningGameModeMixin",
     "MiningDropsMixin",
-    "MiningCombatMixin",
     "MiningSwingMixin",
-    "MiningAttributesMixin",
     "MiningBlockStateAccessor"
   ],
   "client": [

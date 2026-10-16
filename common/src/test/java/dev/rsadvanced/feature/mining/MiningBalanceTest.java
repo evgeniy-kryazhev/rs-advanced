@@ -25,25 +25,21 @@ class MiningBalanceTest {
     }
 
     @Test
-    void scalesLowChargeFromNormalSpeedAndScalesWeaponDamage() {
+    void scalesLowChargeFromNormalSpeed() {
         assertEquals(128, MiningBalance.speed(MiningMode.FAST, 512, 512));
         assertEquals(10, MiningBalance.speed(MiningMode.FAST, 256, 512));
         assertEquals(0, MiningBalance.speed(MiningMode.NORMAL, 0, 80));
         assertEquals(0, MiningBalance.speed(MiningMode.OFF, 1000, 0));
-        assertEquals(4, MiningBalance.damage(0));
-        assertEquals(12, MiningBalance.damage(400));
-        assertEquals(20, MiningBalance.damage(800));
-        assertEquals(20, MiningBalance.damage(10_000));
     }
 
     @Test
     void rejectsInvalidOrOverflowingBalance() {
-        assertThrows(IllegalArgumentException.class, () -> new MiningSettings(0, 2000, 4, 800, 128, true));
-        assertThrows(IllegalArgumentException.class, () -> new MiningSettings(400000, 2000, 4, 800, 5000, true));
-        assertThrows(ArithmeticException.class, () -> new MiningSettings(400000, 2000, Long.MAX_VALUE, 800, 128, true));
+        assertThrows(IllegalArgumentException.class, () -> new MiningSettings(0, 2000, 4, 128, true));
+        assertThrows(IllegalArgumentException.class, () -> new MiningSettings(400000, 2000, 4, 5000, true));
+        assertThrows(ArithmeticException.class, () -> new MiningSettings(400000, 2000, Long.MAX_VALUE, 128, true));
         assertThrows(IllegalArgumentException.class,
-                () -> new MiningSettings(Long.MAX_VALUE, 2000, 1_000_000_000_000L, 800, 4096, true));
+                () -> new MiningSettings(Long.MAX_VALUE, 2000, 1_000_000_000_000L, 4096, true));
         assertDoesNotThrow(
-                () -> new MiningSettings(Long.MAX_VALUE, 2000, 100_000_000_000L, 800, 4096, true));
+                () -> new MiningSettings(Long.MAX_VALUE, 2000, 100_000_000_000L, 4096, true));
     }
 }

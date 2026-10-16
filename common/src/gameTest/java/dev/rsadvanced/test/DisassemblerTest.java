@@ -104,7 +104,7 @@ public final class DisassemblerTest {
     @SharedGameTest("disassembler_server_balance_authority")
     public static void clientSnapshotCannotOverrideServerBalance(GameTestHelper helper) {
         try {
-            MiningBalance.acceptServerSettings(new dev.rsadvanced.config.MiningSettings(100, 1, 1000, 1, 1, false));
+            MiningBalance.acceptServerSettings(new dev.rsadvanced.config.MiningSettings(100, 1, 1000, 1, false));
             assertEquals(dev.rsadvanced.config.RSAdvancedConfig.get().mining(), MiningBalance.settings());
             assertEquals(80, MiningBalance.cost(MiningMode.NORMAL, 1));
         } finally {
@@ -236,27 +236,32 @@ public final class DisassemblerTest {
         assertFalse(MiningNetworking.select(player, new MiningSelectionPayload(slot, dev.rsadvanced.RSAdvanced.id("speed"), "normal")));
     }
 
-    @SharedGameTest("disassembler_weapon_live_charge")
-    public static void weaponUsesCurrentChargeAndSpendsEnergyOnHit(GameTestHelper helper) {
+    @SharedGameTest("mining_tool_uses_pickaxe_attack_without_energy_cost")
+    public static void ordinaryPickaxeAttackDoesNotDependOnCharge(GameTestHelper helper) {
         var player = MiningOperationTest.survivalPlayer(helper);
         ItemStack tool = MiningContent.ITEM.get().createAtEnergyCapacity();
         player.setItemInHand(InteractionHand.MAIN_HAND, tool);
-        MiningCombat.prepareAttack(player);
-        assertEquals(21.0, player.getAttributeValue(Attributes.ATTACK_DAMAGE));
-        var target = EntityType.COW.create(helper.getLevel());
-        target.setHealth(10);
-        helper.getLevel().addFreshEntity(target);
-        for (int tick = 0; tick < 25; tick++) {
-            player.tick();
+        ItemStack pickaxe = new ItemStack(net.minecraft.world.item.Items.DIAMOND_PICKAXE);
+        assertEquals(pickaxe.get(net.minecraft.core.component.DataComponents.ATTRIBUTE_MODIFIERS),
+                tool.get(net.minecraft.core.component.DataComponents.ATTRIBUTE_MODIFIERS));
+        for (long charge : new long[] {MiningItem.CAPACITY, 400L, 0L}) {
+            tool.set(com.refinedmods.refinedstorage.common.content.DataComponents.INSTANCE.getEnergy(), charge);
+            for (int tick = 0; tick < 25; tick++) {
+                // Equipment attributes are applied in the player's full entity tick, not ServerPlayer.tick().
+                player.doTick();
+            }
+            assertEquals(5.0, player.getAttributeValue(Attributes.ATTACK_DAMAGE));
+            assertTrue(Math.abs(player.getAttributeValue(Attributes.ATTACK_SPEED) - 1.2) < 0.001);
+            var target = EntityType.COW.create(helper.getLevel());
+            target.setPos(player.position().add(1, 0, 0));
+            helper.getLevel().addFreshEntity(target);
+            float initialHealth = target.getHealth();
+            player.setOnGround(true);
+            player.fallDistance = 0;
+            player.attack(target);
+            assertEquals(initialHealth - 5.0f, target.getHealth());
+            assertEquals(charge, MiningItem.energy(tool));
+            target.discard();
         }
-        player.attack(target);
-        assertEquals(MiningItem.CAPACITY - 800, MiningItem.energy(tool));
-        tool.set(com.refinedmods.refinedstorage.common.content.DataComponents.INSTANCE.getEnergy(), 400L);
-        MiningCombat.prepareAttack(player);
-        assertEquals(13.0, player.getAttributeValue(Attributes.ATTACK_DAMAGE));
-        tool.set(com.refinedmods.refinedstorage.common.content.DataComponents.INSTANCE.getEnergy(), 0L);
-        MiningCombat.prepareAttack(player);
-        assertEquals(5.0, player.getAttributeValue(Attributes.ATTACK_DAMAGE));
-        target.discard();
     }
 }

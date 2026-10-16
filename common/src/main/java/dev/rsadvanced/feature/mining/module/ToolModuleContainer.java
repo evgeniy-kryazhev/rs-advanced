@@ -12,8 +12,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -95,18 +93,6 @@ public final class ToolModuleContainer {
     public void afterBlockMined(ServerPlayer player, BlockPos position, BlockState originalState) {
         for (ToolModule module : modules.values()) {
             module.afterBlockMined(this, player, position, originalState);
-        }
-    }
-
-    public void hurtEnemy(LivingEntity target, LivingEntity attacker) {
-        for (ToolModule module : modules.values()) {
-            module.hurtEnemy(this, target, attacker);
-        }
-    }
-
-    public void beforeAttack(Player player) {
-        for (ToolModule module : modules.values()) {
-            module.beforeAttack(this, player);
         }
     }
 

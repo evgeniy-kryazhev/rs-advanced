@@ -106,8 +106,6 @@
   "rsadvanced.configuration.mining.chargeRate": "Максимальная зарядка за операцию (FE)",
   "text.autoconfig.rsadvanced.option.mining.baseCost": "Стоимость единицы скорости (FE)",
   "rsadvanced.configuration.mining.baseCost": "Стоимость единицы скорости (FE)",
-  "text.autoconfig.rsadvanced.option.mining.weaponCost": "Энергия за удар (FE)",
-  "rsadvanced.configuration.mining.weaponCost": "Энергия за удар (FE)",
   "text.autoconfig.rsadvanced.option.mining.veinLimit": "Максимум дополнительных блоков жилы",
   "rsadvanced.configuration.mining.veinLimit": "Максимум дополнительных блоков жилы",
   "text.autoconfig.rsadvanced.option.mining.veinEnabled": "Разрешить добычу жилы",
