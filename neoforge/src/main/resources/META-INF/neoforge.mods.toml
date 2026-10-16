@@ -6,6 +6,7 @@ license="MIT"
 modId="rsadvanced"
 version="${modVersion}"
 displayName="RS Advanced"
+logoFile="icon.png"
 description="Extensions for Refined Storage 2. Includes infinite cobblestone and water disks."
 
 [[dependencies.rsadvanced]]
