@@ -20,6 +20,7 @@ Run from the repository root:
 
 - `./gradlew.bat build`: builds both loaders and runs unit tests and GameTest.
 - `./gradlew.bat :common:test`: runs JUnit tests only.
+- `./gradlew.bat runGameTests`: runs shared GameTests sequentially on every loader in `enabled_platforms` and compares scenario IDs in their reports.
 - `./gradlew.bat :fabric:runGameTest :neoforge:runGameTest`: checks both loaders sequentially.
 - `./gradlew.bat :neoforge:runClient`: launches development Minecraft; substitute `fabric` as needed.
 - Run `:<loader>:runServerValidation` and `:<loader>:runClientValidation` in separate terminals for connected client checks.
@@ -36,7 +37,11 @@ Format tooltips for addon machine blocks, including the Network Anchor, consiste
 
 Use JUnit 5 (`*Test.java`) and Minecraft GameTest. No percentage coverage gate exists; test meaningful behavior and regressions on both loaders. GUI changes require actual server-driven menu opening, not just direct screen previews. Persistence changes require sequential `runAnchorRestartSeed`, `runAnchorRestartCheck`, `runAnchorRestartEmpty`, and `runAnchorRestartNorandom` scenarios per loader. Reports and screenshots belong in `build/reports`.
 
+Write shared server GameTests in `common/src/gameTest/java` in top-level `*Test` classes, outside `client` and `mixin` packages. Annotate public static void methods with `@SharedGameTest("unique_snake_case_id")`; they may take no arguments or one `GameTestHelper`. Discovery is automatic on each loader. The default timeout is 100 ticks and successful return completes the test. Asynchronous scenarios must use `completion = SharedGameTest.Completion.MANUAL` and complete through the helper. Keep loader-specific registration in the existing adapters.
+
 ## Architecture & Configuration
+
+Prefer the public API of the pinned Refined Storage version. Reuse RS abstractions and helpers before adding addon-specific types or behavior; implement custom code only where RS provides no suitable API.
 
 When adding a new storage cell, add both its storage part and its storage block, following the equivalent cells and blocks in the pinned Refined Storage version. A new storage cell must include both forms.
 

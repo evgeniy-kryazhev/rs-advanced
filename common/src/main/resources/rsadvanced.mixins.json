@@ -10,9 +10,15 @@
     "ConfiguredStorageMixin",
     "RootStorageMixin",
     "GridContainerMenuMixin",
-    "DiskDriveContainerMenuMixin"
+    "DiskDriveContainerMenuMixin",
+    "StorageBlockContainerMenuMixin",
+    "MiningGameModeMixin",
+    "MiningDropsMixin",
+    "MiningSwingMixin",
+    "MiningBlockStateAccessor"
   ],
   "client": [
+    "client.MiningHeldItemMixin",
     "client.AnchorVisualizationMixin",
     "client.GridResourceMixin",
     "client.DiskDriveTooltipMixin",

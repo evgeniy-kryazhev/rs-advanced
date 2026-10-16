@@ -17,10 +17,30 @@ configurations {
     developmentNeoForge.extendsFrom common
 }
 
+repositories {
+    exclusiveContent {
+        forRepository {
+            maven { url = 'https://maven.blamejared.com/' }
+        }
+        filter { includeGroup 'mezz.jei' }
+    }
+    exclusiveContent {
+        forRepository {
+            maven { url = 'https://modmaven.dev/' }
+        }
+        filter { includeGroup 'mekanism' }
+    }
+}
+
 dependencies {
     neoForge "net.neoforged:neoforge:${rootProject.neoforge_version}"
     modImplementation "dev.architectury:architectury-neoforge:${rootProject.architectury_api_version}"
     modImplementation "com.refinedmods.refinedstorage:refinedstorage-neoforge:${rootProject.refined_storage_version}"
+    // Local development only: no compile API, bundled JAR or published dependency.
+    modLocalRuntime("mezz.jei:jei-${rootProject.minecraft_version}-neoforge:${rootProject.jei_version}") {
+        transitive = false
+    }
+    modLocalRuntime "mekanism:Mekanism:${rootProject.mekanism_version}"
     common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
     shadowCommon(project(path: ':common', configuration: 'transformProductionNeoForge')) { transitive = false }
 }

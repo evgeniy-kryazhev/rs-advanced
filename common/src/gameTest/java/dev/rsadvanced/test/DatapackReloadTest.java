@@ -14,6 +14,7 @@ import static dev.rsadvanced.test.TestAssertions.assertTrue;
 
 /** Reload real world-pack files; definitions stay frozen while ordinary recipes are replaced. */
 public final class DatapackReloadTest {
+    @SharedGameTest(value = "datapack_reload", order = 27, timeoutTicks = 120000, completion = SharedGameTest.Completion.MANUAL)
     public static void reloadKeepsDefinitionsAndUpdatesRecipes(GameTestHelper helper) throws IOException {
         var server = helper.getLevel().getServer();
         var pack = server.getWorldPath(LevelResource.DATAPACK_DIR).resolve("rsadvanced-example");

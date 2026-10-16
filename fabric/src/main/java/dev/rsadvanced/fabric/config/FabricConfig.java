@@ -14,6 +14,8 @@ public final class FabricConfig implements ConfigData {
     @ConfigEntry.Gui.CollapsibleObject(startExpanded = true)
     @ConfigEntry.Gui.Tooltip
     public Anchor anchor = new Anchor();
+    @ConfigEntry.Gui.CollapsibleObject
+    public Mining mining = new Mining();
 
     public static void register() {
         AutoConfig.register(FabricConfig.class, Toml4jConfigSerializer::new);
@@ -28,11 +30,13 @@ public final class FabricConfig implements ConfigData {
     }
 
     public RSAdvancedConfig snapshot() {
-        if (anchor == null) {
+        if (anchor == null || mining == null) {
             throw new IllegalArgumentException("The anchor configuration must be a TOML table");
         }
         return new RSAdvancedConfig(anchor.baseCost, anchor.chunkCostMultiplier, anchor.maxChunks,
-                anchor.randomTicks, anchor.visualizationDistance);
+                anchor.randomTicks, anchor.visualizationDistance,
+                new dev.rsadvanced.config.MiningSettings(mining.capacity, mining.chargeRate, mining.baseCost,
+                        mining.veinLimit, mining.veinEnabled));
     }
 
     @Override
@@ -42,6 +46,19 @@ public final class FabricConfig implements ConfigData {
         } catch (IllegalArgumentException | ArithmeticException exception) {
             throw new ValidationException("Invalid Network Anchor configuration: " + exception.getMessage(), exception);
         }
+    }
+
+    public static final class Mining {
+        @ConfigEntry.Gui.RequiresRestart
+        public long capacity = 400_000;
+        @ConfigEntry.Gui.RequiresRestart
+        public long chargeRate = 2_000;
+        @ConfigEntry.Gui.RequiresRestart
+        public long baseCost = 4;
+        @ConfigEntry.Gui.RequiresRestart
+        public int veinLimit = 128;
+        @ConfigEntry.Gui.RequiresRestart
+        public boolean veinEnabled = true;
     }
 
     public static final class Anchor {

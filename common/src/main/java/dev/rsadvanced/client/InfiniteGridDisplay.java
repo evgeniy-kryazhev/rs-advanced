@@ -4,6 +4,7 @@ import com.refinedmods.refinedstorage.api.resource.repository.ResourceRepository
 import com.refinedmods.refinedstorage.common.api.grid.view.GridResource;
 import com.refinedmods.refinedstorage.common.grid.AbstractGridContainerMenu;
 import dev.rsadvanced.network.InfiniteGridMenu;
+import dev.rsadvanced.network.InfiniteResourceMenu;
 import dev.rsadvanced.network.InfiniteResourcesPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -18,7 +19,7 @@ public final class InfiniteGridDisplay {
             return;
         }
         AbstractContainerMenu menu = minecraft.player.containerMenu;
-        if (menu.containerId == payload.menuId() && menu instanceof InfiniteGridMenu infiniteMenu) {
+        if (menu.containerId == payload.menuId() && menu instanceof InfiniteResourceMenu infiniteMenu) {
             infiniteMenu.rsadvanced$setInfiniteResources(payload.resources());
         }
     }

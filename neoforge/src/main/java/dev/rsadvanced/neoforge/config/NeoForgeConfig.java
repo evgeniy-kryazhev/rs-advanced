@@ -6,6 +6,11 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 /** Native NeoForge config and screen schema, kept outside the shared gameplay code. */
 public final class NeoForgeConfig {
     private final ModConfigSpec spec;
+    private final ModConfigSpec.LongValue miningCapacity;
+    private final ModConfigSpec.LongValue miningChargeRate;
+    private final ModConfigSpec.LongValue miningBaseCost;
+    private final ModConfigSpec.IntValue miningVeinLimit;
+    private final ModConfigSpec.BooleanValue miningVeinEnabled;
     private final ModConfigSpec.LongValue baseCost;
     private final ModConfigSpec.LongValue chunkCostMultiplier;
     private final ModConfigSpec.IntValue maxChunks;
@@ -41,6 +46,13 @@ public final class NeoForgeConfig {
                 .worldRestart()
                 .defineInRange("visualizationDistance", defaults.anchorVisualizationDistance(), 1, 4096);
         builder.pop();
+        builder.comment("Mining multitool settings, in FE. Restart required.").push("mining");
+        miningCapacity = builder.worldRestart().defineInRange("capacity", 400_000L, 1L, Long.MAX_VALUE);
+        miningChargeRate = builder.worldRestart().defineInRange("chargeRate", 2_000L, 1L, Long.MAX_VALUE);
+        miningBaseCost = builder.worldRestart().defineInRange("baseCost", 4L, 1L, Long.MAX_VALUE / 128);
+        miningVeinLimit = builder.worldRestart().defineInRange("veinLimit", 128, 1, 4096);
+        miningVeinEnabled = builder.worldRestart().define("veinEnabled", true);
+        builder.pop();
         spec = builder.build();
     }
 
@@ -51,6 +63,8 @@ public final class NeoForgeConfig {
     public RSAdvancedConfig snapshot() {
         // Validate the combined cost as well as the individual ranges enforced by the spec.
         return new RSAdvancedConfig(baseCost.get(), chunkCostMultiplier.get(), maxChunks.get(),
-                randomTicks.get(), visualizationDistance.get());
+                randomTicks.get(), visualizationDistance.get(),
+                new dev.rsadvanced.config.MiningSettings(miningCapacity.get(), miningChargeRate.get(), miningBaseCost.get(),
+                        miningVeinLimit.get(), miningVeinEnabled.get()));
     }
 }

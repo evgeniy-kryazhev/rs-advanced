@@ -1,0 +1,29 @@
+{
+  "pools": [
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "functions": [
+            {
+              "include": [
+                "rsadvanced:cell_definition",
+                "minecraft:custom_name"
+              ],
+              "source": "block_entity",
+              "function": "minecraft:copy_components"
+            }
+          ],
+          "name": "rsadvanced:infinite_fluid_storage_block"
+        }
+      ],
+      "rolls": 1,
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ]
+    }
+  ],
+  "type": "minecraft:block"
+}

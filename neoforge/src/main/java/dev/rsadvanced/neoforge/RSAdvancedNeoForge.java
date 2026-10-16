@@ -15,6 +15,11 @@ import net.neoforged.fml.config.ModConfig;
 import dev.rsadvanced.content.AdvancedContent;
 import dev.rsadvanced.feature.disk.CellDefinition;
 import dev.rsadvanced.feature.disk.CellDefinitions;
+import dev.rsadvanced.feature.disk.InfiniteStorageBlockContent;
+import dev.rsadvanced.feature.terminal.TerminalContent;
+import dev.rsadvanced.feature.mining.MiningContent;
+import com.refinedmods.refinedstorage.neoforge.support.energy.EnergyStorageAdapter;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.minecraft.world.item.CreativeModeTab;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -31,6 +36,8 @@ public final class RSAdvancedNeoForge {
         modBus.addListener(this::registerAnchorCapability);
         modBus.addListener(this::registerAnchorTickets);
         RSAdvanced.initialize(config::snapshot);
+        TerminalContent.register();
+        MiningContent.register();
         EnvExecutor.runInEnv(Env.CLIENT, () -> () -> RSAdvancedNeoForgeClient.initialize(modBus, modContainer));
     }
 
@@ -40,8 +47,13 @@ public final class RSAdvancedNeoForge {
         }
         event.accept(AdvancedContent.INFINITE_STORAGE_PART.get());
         event.accept(AnchorContent.ITEM.get());
+        event.accept(TerminalContent.ITEM.get().createAtEnergyCapacity());
+        event.accept(MiningContent.ITEM.get().createAtEnergyCapacity());
         for (var cell : AdvancedContent.creativeCells(event.getParameters().holders())) {
             event.accept(cell, CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
+        }
+        for (var storageBlock : InfiniteStorageBlockContent.creativeBlocks(event.getParameters().holders())) {
+            event.accept(storageBlock, CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
         }
     }
 
@@ -52,10 +64,20 @@ public final class RSAdvancedNeoForge {
     }
 
     private void registerAnchorCapability(RegisterCapabilitiesEvent event) {
+        event.registerItem(Capabilities.EnergyStorage.ITEM,
+                (stack, context) -> new EnergyStorageAdapter(TerminalContent.ITEM.get().createEnergyStorage(stack)),
+                TerminalContent.ITEM.get());
+        event.registerItem(Capabilities.EnergyStorage.ITEM,
+                (stack, context) -> new EnergyStorageAdapter(MiningContent.ITEM.get().createEnergyStorage(stack)),
+                MiningContent.ITEM.get());
         event.registerBlockEntity(RefinedStorageNeoForgeApi.INSTANCE
                         .getNetworkNodeContainerProviderCapability(),
                 AnchorContent.ENTITY.get(),
                 (anchor, side) -> anchor.getContainerProvider());
+        event.registerBlockEntity(RefinedStorageNeoForgeApi.INSTANCE
+                        .getNetworkNodeContainerProviderCapability(),
+                InfiniteStorageBlockContent.ENTITY.get(),
+                (storageBlock, side) -> storageBlock.getContainerProvider());
     }
 
     private void registerAnchorTickets(RegisterTicketControllersEvent event) {

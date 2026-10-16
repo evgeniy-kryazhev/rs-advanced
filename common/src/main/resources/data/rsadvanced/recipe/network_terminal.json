@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["EPE", "GWR", "EPE"],
+  "key": {
+    "E": { "item": "minecraft:ender_pearl" },
+    "P": { "item": "refinedstorage:advanced_processor" },
+    "G": { "item": "minecraft:glass" },
+    "W": { "item": "refinedstorage:wireless_grid" },
+    "R": { "item": "refinedstorage:network_receiver" }
+  },
+  "result": { "id": "rsadvanced:network_terminal", "count": 1 }
+}

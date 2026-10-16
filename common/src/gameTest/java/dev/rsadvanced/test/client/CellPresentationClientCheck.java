@@ -68,6 +68,9 @@ public final class CellPresentationClientCheck {
     private static int anchorInteractionStage;
     private static boolean checkingAnchorDistance;
     private static boolean checkingConfiguration;
+    private static boolean checkingStorageBlocks;
+    private static boolean checkingTerminal;
+    private static boolean checkingMining;
 
     public static void register() {
         if (Boolean.getBoolean("rsadvanced.test.clientValidation")) {
@@ -76,6 +79,45 @@ public final class CellPresentationClientCheck {
     }
 
     private static void tick(Minecraft minecraft) {
+        if (checkingMining) {
+            try {
+                if (MiningClientCheck.tick(minecraft)) {
+                    checkingMining = false;
+                    if (Boolean.getBoolean("rsadvanced.test.miningOnly")) {
+                        finish(minecraft, null);
+                    } else {
+                        showOverlayPreview(minecraft);
+                    }
+                }
+            } catch (Exception | AssertionError failure) {
+                finish(minecraft, failure);
+            }
+            return;
+        }
+        if (checkingTerminal) {
+            try {
+                if (TerminalClientCheck.tick(minecraft)) {
+                    checkingTerminal = false;
+                    MiningClientCheck.start(minecraft);
+                    checkingMining = true;
+                }
+            } catch (Exception | AssertionError failure) {
+                finish(minecraft, failure);
+            }
+            return;
+        }
+        if (checkingStorageBlocks) {
+            try {
+                if (StorageBlockClientCheck.tick(minecraft)) {
+                    checkingStorageBlocks = false;
+                    TerminalClientCheck.start(minecraft);
+                    checkingTerminal = true;
+                }
+            } catch (Exception | AssertionError failure) {
+                finish(minecraft, failure);
+            }
+            return;
+        }
         if (checkingConfiguration) {
             try {
                 if (ConfigurationClientCheck.tick(minecraft)) {
@@ -138,6 +180,11 @@ public final class CellPresentationClientCheck {
             return;
         }
         started = true;
+        if (Boolean.getBoolean("rsadvanced.test.miningOnly")) {
+            MiningClientCheck.start(minecraft);
+            checkingMining = true;
+            return;
+        }
         try {
             checkCatalogAndModels(minecraft);
             checkGridInfinity(minecraft);
@@ -157,7 +204,8 @@ public final class CellPresentationClientCheck {
                 try {
                     checkNames(minecraft, "en_us", "Pack Stone", "Pack Water", "Pack Housing");
                     checkNames(minecraft, "ru_ru", "Камень сборки", "Вода сборки", "Корпус сборки");
-                    showOverlayPreview(minecraft);
+                    StorageBlockClientCheck.start(minecraft);
+                    checkingStorageBlocks = true;
                 } catch (Exception | AssertionError exception) {
                     finish(minecraft, exception);
                 }
@@ -202,6 +250,13 @@ public final class CellPresentationClientCheck {
             assertEquals(kind.diskModel(), RefinedStorageClientApi.INSTANCE.getDiskModelsByItem().get(item));
             var model = minecraft.getModelManager().getModel(ModelResourceLocation.inventory(BuiltInRegistries.ITEM.getKey(item)));
             assertTrue(model != minecraft.getModelManager().getMissingModel());
+            var blockItem = kind == DiskResourceKind.ITEM
+                    ? dev.rsadvanced.feature.disk.InfiniteStorageBlockContent.ITEM.get()
+                    : dev.rsadvanced.feature.disk.InfiniteStorageBlockContent.FLUID.get();
+            var blockModel = minecraft.getModelManager().getModel(
+                    ModelResourceLocation.inventory(BuiltInRegistries.ITEM.getKey(blockItem)));
+            assertTrue(blockModel != minecraft.getModelManager().getMissingModel());
+            assertTrue(blockItem.getTooltipImage(new ItemStack(blockItem)).orElseThrow() instanceof HelpTooltipComponent);
         }
     }
 
@@ -212,6 +267,10 @@ public final class CellPresentationClientCheck {
             var actualIds = cells.stream().map(stack -> stack.get(AdvancedComponents.CELL_DEFINITION.get())).toList();
             assertEquals(expectedIds, actualIds);
             assertEquals(expectedIds.size(), actualIds.stream().distinct().count());
+            var storageBlocks = stacks.stream()
+                    .filter(stack -> stack.getItem() instanceof dev.rsadvanced.feature.disk.InfiniteStorageBlockItem)
+                    .map(stack -> stack.get(AdvancedComponents.CELL_DEFINITION.get())).toList();
+            assertEquals(expectedIds, storageBlocks);
         }
         var displayItems = new ArrayList<>(tab.getDisplayItems());
         var tail = displayItems.subList(displayItems.size() - expectedIds.size(), displayItems.size());

@@ -3,6 +3,10 @@ package dev.rsadvanced.mixin.client;
 import com.refinedmods.refinedstorage.common.storage.AbstractProgressStorageScreen;
 import dev.rsadvanced.feature.disk.DiskDriveSources;
 import dev.rsadvanced.feature.disk.InfiniteDiskDriveMenu;
+import dev.rsadvanced.feature.disk.CellResourceNames;
+import dev.rsadvanced.network.InfiniteResourceMenu;
+import com.refinedmods.refinedstorage.common.storage.storageblock.StorageBlockContainerMenu;
+import net.minecraft.ChatFormatting;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -17,6 +21,17 @@ public abstract class DiskDriveTooltipMixin {
     @Inject(method = "createProgressTooltip", at = @At("RETURN"), cancellable = true, require = 1)
     private void rsadvanced$showInfiniteSources(CallbackInfoReturnable<List<Component>> callback) {
         AbstractContainerScreen<?> screen = (AbstractContainerScreen<?>) (Object) this;
+        if (screen.getMenu() instanceof StorageBlockContainerMenu
+                && screen.getMenu() instanceof InfiniteResourceMenu block
+                && !block.rsadvanced$getInfiniteResources().isEmpty()) {
+            List<Component> tooltip = new ArrayList<>();
+            for (var resource : block.rsadvanced$getInfiniteResources()) {
+                tooltip.add(Component.translatable("tooltip.rsadvanced.drive_infinite_source",
+                        CellResourceNames.name(resource)).withStyle(ChatFormatting.AQUA));
+            }
+            callback.setReturnValue(tooltip);
+            return;
+        }
         if (!(screen.getMenu() instanceof InfiniteDiskDriveMenu drive)) {
             return;
         }

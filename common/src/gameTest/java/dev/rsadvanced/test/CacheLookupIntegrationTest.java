@@ -22,6 +22,7 @@ public final class CacheLookupIntegrationTest {
     private CacheLookupIntegrationTest() {
     }
 
+    @SharedGameTest(value = "cache_lookup", order = 12)
     public static void infiniteTransfersDoNotCopyTheDriveCatalog() {
         TestCell cell = TestCell.named("rsadvanced:cobblestone");
         ResourceKey resource = cell.resource();

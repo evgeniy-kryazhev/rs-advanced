@@ -17,6 +17,15 @@ configurations {
     developmentFabric.extendsFrom common
 }
 
+repositories {
+    exclusiveContent {
+        forRepository {
+            maven { url = 'https://maven.blamejared.com/' }
+        }
+        filter { includeGroup 'mezz.jei' }
+    }
+}
+
 dependencies {
     modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
@@ -27,6 +36,10 @@ dependencies {
     }
     modCompileOnly 'com.terraformersmc:modmenu:11.0.3'
     modLocalRuntime 'com.terraformersmc:modmenu:11.0.3'
+    // Local development only: no compile API, bundled JAR or published dependency.
+    modLocalRuntime("mezz.jei:jei-${rootProject.minecraft_version}-fabric:${rootProject.jei_version}") {
+        transitive = false
+    }
     common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
     shadowCommon(project(path: ':common', configuration: 'transformProductionFabric')) { transitive = false }
 }

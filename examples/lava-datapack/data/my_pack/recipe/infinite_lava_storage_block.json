@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CPE",
+    "EME",
+    "ERE"
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:lava_bucket"
+    },
+    "P": {
+      "item": "rsadvanced:infinite_storage_part"
+    },
+    "E": {
+      "item": "refinedstorage:quartz_enriched_iron"
+    },
+    "M": {
+      "item": "refinedstorage:machine_casing"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "id": "rsadvanced:infinite_fluid_storage_block",
+    "count": 1,
+    "components": {
+      "rsadvanced:cell_definition": "my_pack:lava"
+    }
+  }
+}
