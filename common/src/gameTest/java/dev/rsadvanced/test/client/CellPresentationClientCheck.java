@@ -83,7 +83,11 @@ public final class CellPresentationClientCheck {
             try {
                 if (MiningClientCheck.tick(minecraft)) {
                     checkingMining = false;
-                    showOverlayPreview(minecraft);
+                    if (Boolean.getBoolean("rsadvanced.test.miningOnly")) {
+                        finish(minecraft, null);
+                    } else {
+                        showOverlayPreview(minecraft);
+                    }
                 }
             } catch (Exception | AssertionError failure) {
                 finish(minecraft, failure);
@@ -176,6 +180,11 @@ public final class CellPresentationClientCheck {
             return;
         }
         started = true;
+        if (Boolean.getBoolean("rsadvanced.test.miningOnly")) {
+            MiningClientCheck.start(minecraft);
+            checkingMining = true;
+            return;
+        }
         try {
             checkCatalogAndModels(minecraft);
             checkGridInfinity(minecraft);

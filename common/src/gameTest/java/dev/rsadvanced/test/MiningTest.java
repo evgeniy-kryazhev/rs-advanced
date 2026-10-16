@@ -3,19 +3,61 @@ package dev.rsadvanced.test;
 import com.refinedmods.refinedstorage.common.api.RefinedStorageApi;
 import dev.rsadvanced.feature.mining.MiningCardMenu;
 import dev.rsadvanced.feature.mining.MiningContent;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.TooltipFlag;
 
 import static dev.rsadvanced.test.TestAssertions.assertEquals;
 import static dev.rsadvanced.test.TestAssertions.assertFalse;
 import static dev.rsadvanced.test.TestAssertions.assertTrue;
 
 public final class MiningTest {
+    @SharedGameTest("mining_tool_tooltip_has_one_mainhand_attribute_section")
+    public static void tooltipShowsCombatStatsOnlyOnce(GameTestHelper helper) {
+        var player = MiningOperationTest.survivalPlayer(helper);
+        ItemStack tool = MiningContent.ITEM.get().createAtEnergyCapacity();
+        var lines = tool.getTooltipLines(Item.TooltipContext.of(helper.getLevel()), player, TooltipFlag.NORMAL);
+        var attributeHeaders = lines.stream()
+                .map(Component::getContents)
+                .filter(contents -> contents instanceof TranslatableContents)
+                .map(contents -> ((TranslatableContents) contents).getKey())
+                .filter(key -> key.startsWith("item.modifiers."))
+                .toList();
+        assertEquals(List.of("item.modifiers.mainhand"), attributeHeaders);
+    }
+
+    @SharedGameTest("mining_tool_suppresses_only_its_own_hand_swing")
+    public static void toolDoesNotSwingInEitherHand(GameTestHelper helper) {
+        var player = MiningOperationTest.survivalPlayer(helper);
+        for (InteractionHand hand : InteractionHand.values()) {
+            player.swinging = false;
+            player.swingTime = 0;
+            player.setItemInHand(hand, MiningContent.ITEM.get().createAtEnergyCapacity());
+            player.swing(hand);
+            assertFalse(player.swinging);
+            assertEquals(0, player.swingTime);
+            // Server animation broadcasts and remote player animations use the two-argument overload.
+            player.swing(hand, true);
+            assertFalse(player.swinging);
+
+            InteractionHand otherHand = hand == InteractionHand.MAIN_HAND
+                    ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
+            player.setItemInHand(otherHand, new ItemStack(Items.IRON_SWORD));
+            player.swing(otherHand);
+            assertTrue(player.swinging);
+            assertEquals(otherHand, player.swingingArm);
+        }
+    }
+
     @SharedGameTest("mining_card_slot_and_persistence")
     public static void cardSlotTransfersLocksAndSaves(GameTestHelper helper) {
         var player = helper.makeMockServerPlayerInLevel();

@@ -99,6 +99,7 @@ loom {
             source sourceSets.gameTest
             runDir 'build/run/clientValidation'
             property 'rsadvanced.test.clientValidation', 'true'
+            property 'rsadvanced.test.miningOnly', providers.gradleProperty('miningClientOnly').getOrElse('false')
             property 'rsadvanced.test.clientReport', project.layout.buildDirectory.file('reports/clientValidation/results.txt').get().asFile.absolutePath
             programArgs '--quickPlayMultiplayer', project.name == 'fabric' ? '127.0.0.1:25575' : '127.0.0.1:25576'
             if (project.name == 'neoforge') {

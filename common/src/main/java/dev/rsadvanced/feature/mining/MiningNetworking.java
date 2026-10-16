@@ -1,10 +1,13 @@
 package dev.rsadvanced.feature.mining;
 
+import com.refinedmods.refinedstorage.common.api.RefinedStorageApi;
+import com.refinedmods.refinedstorage.common.api.support.slotreference.SlotReferenceFactory;
 import com.refinedmods.refinedstorage.common.security.BuiltinPermission;
 import dev.architectury.event.events.common.LifecycleEvent;
 import dev.architectury.event.events.common.PlayerEvent;
 import dev.architectury.event.events.common.TickEvent;
 import dev.architectury.networking.NetworkManager;
+import dev.architectury.registry.menu.MenuRegistry;
 import dev.architectury.platform.Platform;
 import dev.architectury.utils.Env;
 import dev.rsadvanced.config.RSAdvancedConfig;
@@ -17,9 +20,12 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.item.ItemStack;
 
 public final class MiningNetworking {
@@ -30,6 +36,12 @@ public final class MiningNetworking {
 
     public static void register() {
         LifecycleEvent.SERVER_BEFORE_START.register(MiningBalance::bindServer);
+        NetworkManager.registerReceiver(NetworkManager.Side.C2S, MiningConfigurationPayload.TYPE,
+                MiningConfigurationPayload.CODEC, (payload, context) -> context.queue(() -> {
+                    if (context.getPlayer() instanceof ServerPlayer player) {
+                        openConfiguration(player, payload.offhand());
+                    }
+                }));
         NetworkManager.registerReceiver(NetworkManager.Side.C2S, MiningSelectionPayload.TYPE,
                 MiningSelectionPayload.CODEC, (payload, context) -> context.queue(() -> {
                     if (context.getPlayer() instanceof ServerPlayer player) {
@@ -88,6 +100,23 @@ public final class MiningNetworking {
                     RSAdvancedConfig.get().mining()));
             SYNCED_SETTINGS.add(player.getUUID());
         }
+    }
+
+    private static void openConfiguration(ServerPlayer player, boolean offhand) {
+        InteractionHand hand = offhand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
+        if (!(player.getItemInHand(hand).getItem() instanceof MiningItem)) {
+            return;
+        }
+        var reference = RefinedStorageApi.INSTANCE.createInventorySlotReference(player, hand);
+        MenuRegistry.openExtendedMenu(player,
+                new SimpleMenuProvider(
+                        (id, inventory, owner) -> new MiningConfigurationMenu(id, inventory, reference, offhand),
+                        Component.translatable("gui.rsadvanced.mining_configuration")),
+                buffer -> {
+                    var registryBuffer = new RegistryFriendlyByteBuf(buffer, player.registryAccess());
+                    SlotReferenceFactory.STREAM_CODEC.encode(registryBuffer, reference);
+                    registryBuffer.writeBoolean(offhand);
+                });
     }
 
     public static boolean select(ServerPlayer player, MiningSelectionPayload payload) {

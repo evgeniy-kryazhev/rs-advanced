@@ -8,6 +8,7 @@ import dev.rsadvanced.feature.connection.NetworkCardSlot;
 import dev.rsadvanced.feature.mining.MiningArcPayload;
 import dev.rsadvanced.feature.mining.MiningBalance;
 import dev.rsadvanced.feature.mining.MiningConnectionPayload;
+import dev.rsadvanced.feature.mining.MiningConfigurationPayload;
 import dev.rsadvanced.feature.mining.MiningItem;
 import dev.rsadvanced.feature.mining.MiningSettingsPayload;
 import java.util.ArrayList;
@@ -59,7 +60,8 @@ public final class MiningClient {
                     InteractionHand hand = minecraft.player.getMainHandItem().getItem() instanceof MiningItem
                             ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
                     if (minecraft.player.getItemInHand(hand).getItem() instanceof MiningItem) {
-                        MiningRadialMenu.open(hand);
+                        NetworkManager.sendToServer(new MiningConfigurationPayload(
+                                hand == InteractionHand.OFF_HAND));
                     }
                 }
             }

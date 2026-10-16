@@ -4,6 +4,7 @@ import dev.rsadvanced.RSAdvanced;
 import dev.rsadvanced.content.AdvancedComponents;
 import dev.rsadvanced.feature.connection.NetworkCardSlot;
 import dev.rsadvanced.feature.mining.MiningContent;
+import dev.rsadvanced.feature.mining.MiningConfigurationMenu;
 import dev.rsadvanced.feature.mining.MiningItem;
 import dev.rsadvanced.feature.mining.MiningMode;
 import dev.rsadvanced.feature.mining.MiningNetworking;
@@ -29,6 +30,34 @@ import net.minecraft.world.level.block.Blocks;
 import static dev.rsadvanced.test.TestAssertions.*;
 
 public final class MiningModulesTest {
+    @SharedGameTest("mining_configuration_locks_held_tool_and_tracks_replacement")
+    public static void configurationCannotTransferOrDropTheInspectedTool(GameTestHelper helper) {
+        var player = MiningOperationTest.survivalPlayer(helper);
+        for (InteractionHand hand : InteractionHand.values()) {
+            ItemStack tool = MiningContent.ITEM.get().createAtEnergyCapacity();
+            player.setItemInHand(hand, tool);
+            var reference = com.refinedmods.refinedstorage.common.api.RefinedStorageApi.INSTANCE
+                    .createInventorySlotReference(player, hand);
+            var menu = new MiningConfigurationMenu(1, player.getInventory(), reference,
+                    hand == InteractionHand.OFF_HAND);
+            assertTrue(menu.stillValid(player));
+            assertTrue(menu.tool() == tool);
+            assertFalse(menu.getSlot(0).mayPickup(player));
+            assertFalse(menu.getSlot(0).mayPlace(new ItemStack(Items.STICK)));
+            menu.clicked(0, 1, net.minecraft.world.inventory.ClickType.THROW, player);
+            menu.clicked(0, 0, net.minecraft.world.inventory.ClickType.SWAP, player);
+            assertTrue(menu.quickMoveStack(player, 0).isEmpty());
+            assertTrue(player.getItemInHand(hand) == tool);
+            assertTrue(MiningNetworking.select(player,
+                    new MiningSelectionPayload(reference, ToolModules.AREA.id(), "3")));
+            assertTrue(menu.stillValid(player));
+            assertEquals(1, MiningItem.radius(menu.tool()));
+            // An identical-looking replacement is still a different device and must close inspection.
+            player.setItemInHand(hand, tool.copy());
+            assertFalse(menu.stillValid(player));
+        }
+    }
+
     @SharedGameTest("mining_modules_factory_loadout_and_stack_isolation")
     public static void modulesAreInstalledAndKeepSeparateStackState(GameTestHelper helper) {
         ItemStack first = MiningContent.ITEM.get().createAtEnergyCapacity();

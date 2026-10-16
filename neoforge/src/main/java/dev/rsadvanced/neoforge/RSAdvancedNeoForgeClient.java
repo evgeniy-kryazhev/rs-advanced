@@ -5,6 +5,7 @@ import dev.rsadvanced.feature.anchor.AnchorContent;
 import dev.rsadvanced.feature.terminal.TerminalContent;
 import dev.rsadvanced.feature.mining.MiningContent;
 import dev.rsadvanced.feature.mining.client.MiningCardScreen;
+import dev.rsadvanced.feature.mining.client.MiningConfigurationScreen;
 import dev.rsadvanced.feature.terminal.client.TerminalCardScreen;
 import com.refinedmods.refinedstorage.common.support.network.item.NetworkItemPropertyFunction;
 import net.minecraft.client.renderer.item.ItemProperties;
@@ -36,5 +37,6 @@ final class RSAdvancedNeoForgeClient {
         event.register(AnchorContent.MENU.get(), AnchorScreen::new);
         event.register(TerminalContent.CARD_MENU.get(), TerminalCardScreen::new);
         event.register(MiningContent.CARD_MENU.get(), MiningCardScreen::new);
+        event.register(MiningContent.CONFIGURATION_MENU.get(), MiningConfigurationScreen::new);
     }
 }

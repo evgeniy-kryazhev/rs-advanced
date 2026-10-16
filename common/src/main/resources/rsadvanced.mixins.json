@@ -15,10 +15,12 @@
     "MiningGameModeMixin",
     "MiningDropsMixin",
     "MiningCombatMixin",
+    "MiningSwingMixin",
     "MiningAttributesMixin",
     "MiningBlockStateAccessor"
   ],
   "client": [
+    "client.MiningHeldItemMixin",
     "client.AnchorVisualizationMixin",
     "client.GridResourceMixin",
     "client.DiskDriveTooltipMixin",

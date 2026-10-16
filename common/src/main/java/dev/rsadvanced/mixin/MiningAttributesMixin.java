@@ -33,7 +33,9 @@ public abstract class MiningAttributesMixin {
     private void rsadvanced$groupModifiers(EquipmentSlotGroup group, BiConsumer<Holder<Attribute>, AttributeModifier> consumer,
                                           Operation<Void> original) {
         ItemStack stack = (ItemStack) (Object) this;
-        if (!(stack.getItem() instanceof MiningItem) || !group.test(EquipmentSlot.MAINHAND)) {
+        // Tooltip rendering queries every group separately; ANY and HAND also match MAINHAND.
+        // Publish the tool's combat stats in only the specific main-hand section.
+        if (!(stack.getItem() instanceof MiningItem) || group != EquipmentSlotGroup.MAINHAND) {
             original.call(group, consumer);
             return;
         }

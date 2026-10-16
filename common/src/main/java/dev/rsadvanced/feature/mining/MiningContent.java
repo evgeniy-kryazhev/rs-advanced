@@ -19,6 +19,12 @@ public final class MiningContent {
             () -> MenuRegistry.ofExtended((id, inventory, buffer) ->
                     new MiningCardMenu(id, inventory, SlotReferenceFactory.STREAM_CODEC.decode(
                             new RegistryFriendlyByteBuf(buffer, inventory.player.registryAccess())))));
+    public static final RegistrySupplier<MenuType<MiningConfigurationMenu>> CONFIGURATION_MENU = MENUS.register(
+            "mining_configuration", () -> MenuRegistry.ofExtended((id, inventory, buffer) -> {
+                var registryBuffer = new RegistryFriendlyByteBuf(buffer, inventory.player.registryAccess());
+                var reference = SlotReferenceFactory.STREAM_CODEC.decode(registryBuffer);
+                return new MiningConfigurationMenu(id, inventory, reference, registryBuffer.readBoolean());
+            }));
 
     private MiningContent() {
     }
