@@ -30,9 +30,25 @@ final class TerminalRestartCheck {
         terminal.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(List.of(card)));
         RefinedStorageApi.INSTANCE.getEnergyStorage(terminal).orElseThrow().receive(321, Action.EXECUTE);
         ((ChestBlockEntity) level.getBlockEntity(position)).setItem(0, terminal);
+        ItemStack miningTool = new ItemStack(dev.rsadvanced.feature.mining.MiningContent.ITEM.get());
+        miningTool.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(List.of(card)));
+        dev.rsadvanced.feature.mining.MiningItem.setRadius(miningTool, 2);
+        dev.rsadvanced.feature.mining.MiningItem.setVeinMining(miningTool, true);
+        dev.rsadvanced.feature.mining.MiningItem.setMode(miningTool, dev.rsadvanced.feature.mining.MiningMode.FAST);
+        RefinedStorageApi.INSTANCE.getEnergyStorage(miningTool).orElseThrow().receive(789, Action.EXECUTE);
+        ((ChestBlockEntity) level.getBlockEntity(position)).setItem(1, miningTool);
     }
 
     static void verify(ServerLevel level, BlockPos position) {
+        ItemStack miningTool = ((ChestBlockEntity) level.getBlockEntity(position)).getItem(1);
+        TestAssertions.assertTrue(miningTool.is(dev.rsadvanced.feature.mining.MiningContent.ITEM.get()));
+        TestAssertions.assertEquals(2, dev.rsadvanced.feature.mining.MiningItem.radius(miningTool));
+        TestAssertions.assertTrue(dev.rsadvanced.feature.mining.MiningItem.veinMining(miningTool));
+        TestAssertions.assertEquals(dev.rsadvanced.feature.mining.MiningMode.FAST,
+                dev.rsadvanced.feature.mining.MiningItem.mode(miningTool));
+        TestAssertions.assertEquals(789, RefinedStorageApi.INSTANCE.getEnergyStorage(miningTool).orElseThrow().getStored());
+        TestAssertions.assertEquals(RECEIVER, dev.rsadvanced.feature.connection.NetworkCardSlot.card(miningTool)
+                .get(com.refinedmods.refinedstorage.common.content.DataComponents.INSTANCE.getNetworkLocation()));
         ItemStack terminal = ((ChestBlockEntity) level.getBlockEntity(position)).getItem(0);
         TestAssertions.assertTrue(terminal.is(TerminalContent.ITEM.get()));
         ItemStack card = TerminalItem.card(terminal);

@@ -15,6 +15,7 @@ public final class AdvancedNetworking {
     }
 
     public static void register() {
+        dev.rsadvanced.feature.mining.MiningNetworking.register();
         NetworkManager.registerReceiver(NetworkManager.Side.C2S, AnchorVisualizationRefreshPayload.TYPE,
                 AnchorVisualizationRefreshPayload.CODEC, (payload, context) -> context.queue(() -> {
                     if (context.getPlayer() instanceof ServerPlayer player) {

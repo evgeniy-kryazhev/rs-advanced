@@ -231,19 +231,23 @@ public final class NetworkCardConnectionTest {
     }
 
     /** Real blocks and energy; only security policy is substituted for deterministic permission changes. */
-    private static final class Fixture implements AutoCloseable {
-        private final ServerLevel level;
+    static final class Fixture implements AutoCloseable {
+        final ServerLevel level;
         private final BlockPos controllerPosition;
         private final BlockPos receiverPosition;
         private final ControllerBlockEntity controller;
-        private final AbstractNetworkNode receiverNode;
-        private final ServerPlayer player;
-        private final ItemStack card;
+        final AbstractNetworkNode receiverNode;
+        final ServerPlayer player;
+        final ItemStack card;
         private final NetworkImpl backingNetwork;
-        private final Network network;
+        final Network network;
         private final AtomicReference<PlatformSecurityNetworkComponent> security = new AtomicReference<>();
 
-        private Fixture(GameTestHelper helper) {
+        Fixture(GameTestHelper helper) {
+            this(helper, helper.makeMockServerPlayerInLevel());
+        }
+
+        Fixture(GameTestHelper helper, ServerPlayer testPlayer) {
             level = helper.getLevel();
             controllerPosition = helper.absolutePos(new BlockPos(0, 4, 0));
             receiverPosition = controllerPosition.east();
@@ -252,7 +256,7 @@ public final class NetworkCardConnectionTest {
             controller = (ControllerBlockEntity) level.getBlockEntity(controllerPosition);
             var receiver = (NetworkReceiverBlockEntity) level.getBlockEntity(receiverPosition);
             receiverNode = (AbstractNetworkNode) receiver.getContainerProvider().getContainers().iterator().next().getNode();
-            player = helper.makeMockServerPlayerInLevel();
+            player = testPlayer;
             player.setPos(-100000, 80, -100000);
             card = boundCard(level, receiverPosition);
             allow(BuiltinPermission.OPEN, BuiltinPermission.INSERT);
@@ -266,7 +270,7 @@ public final class NetworkCardConnectionTest {
             controller.getEnergyStorage().receive(1000, Action.EXECUTE);
         }
 
-        private void allow(BuiltinPermission... permissions) {
+        void allow(BuiltinPermission... permissions) {
             security.set(new PlatformSecurityNetworkComponentImpl(SecurityPolicy.of(permissions)));
         }
 

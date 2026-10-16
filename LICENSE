@@ -19,3 +19,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+Third-party material:
+The Slice-derived files identified in licenses/Slice-NOTICE.txt retain their
+Creative Commons Attribution-NonCommercial 4.0 International license. The MIT
+license above does not apply to those files. Their complete license and
+attribution notice are distributed in the licenses directory of each JAR and
+in common/src/main/resources/licenses in this source repository.

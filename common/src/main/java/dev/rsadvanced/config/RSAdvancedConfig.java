@@ -9,15 +9,21 @@ public record RSAdvancedConfig(
         long anchorChunkCostMultiplier,
         int anchorMaxChunks,
         boolean anchorRandomTicks,
-        int anchorVisualizationDistance) {
+        int anchorVisualizationDistance, MiningSettings mining) {
     public static final RSAdvancedConfig DEFAULT = new RSAdvancedConfig(80, 1, 256, true, 256);
     private static volatile RSAdvancedConfig current = DEFAULT;
+
+    public RSAdvancedConfig(long baseCost, long chunkCostMultiplier, int maxChunks, boolean randomTicks,
+                            int visualizationDistance) {
+        this(baseCost, chunkCostMultiplier, maxChunks, randomTicks, visualizationDistance, MiningSettings.DEFAULT);
+    }
 
     public RSAdvancedConfig(long baseCost, long chunkCostMultiplier, int maxChunks, boolean randomTicks) {
         this(baseCost, chunkCostMultiplier, maxChunks, randomTicks, 256);
     }
 
     public RSAdvancedConfig {
+        Objects.requireNonNull(mining, "mining");
         if (anchorBaseCost < 0 || anchorChunkCostMultiplier < 0 || anchorMaxChunks < 1 || anchorMaxChunks > 65536) {
             throw new IllegalArgumentException("Anchor costs must be nonnegative and maxChunks must be 1..65536");
         }

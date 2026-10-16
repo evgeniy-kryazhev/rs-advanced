@@ -75,6 +75,7 @@ public final class ClientValidationServer {
             card.set(com.refinedmods.refinedstorage.common.content.DataComponents.INSTANCE.getNetworkLocation(),
                     net.minecraft.core.GlobalPos.of(player.level().dimension(), receiverPosition));
             player.getInventory().setItem(8, card);
+            player.getInventory().setItem(6, dev.rsadvanced.feature.mining.MiningContent.ITEM.get().createAtEnergyCapacity());
         }));
         TickEvent.SERVER_PRE.register(server -> {
             for (var player : server.getPlayerList().getPlayers()) {
@@ -94,6 +95,9 @@ public final class ClientValidationServer {
     }
 
     private static void serverPlayerSetup(ServerPlayer player) {
+        // NeoForge reuses the Dev profile. Cards left by earlier checks must not alter the next fixture.
+        player.getInventory().clearContent();
+        player.inventoryMenu.setCarried(net.minecraft.world.item.ItemStack.EMPTY);
         // GameTestServer's default operator level is insufficient for teleport/setblock commands.
         player.getServer().getPlayerList().getOps().add(new ServerOpListEntry(player.getGameProfile(), 4, true));
         player.getServer().getCommands().sendCommands(player);

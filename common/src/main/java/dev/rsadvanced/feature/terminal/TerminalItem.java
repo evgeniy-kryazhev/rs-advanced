@@ -11,7 +11,6 @@ import dev.rsadvanced.feature.connection.NetworkCardItemContext;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -20,7 +19,6 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.item.context.UseOnContext;
 
 /** RS supplies the grid, resource operations, autocrafting, energy capacity and operation costs. */
@@ -30,11 +28,11 @@ public final class TerminalItem extends WirelessGridItem {
     }
 
     public static ItemStack card(ItemStack terminal) {
-        return terminal.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY).copyOne();
+        return dev.rsadvanced.feature.connection.NetworkCardSlot.card(terminal);
     }
 
     public static boolean isNetworkCard(ItemStack stack) {
-        return stack.is(com.refinedmods.refinedstorage.common.content.Items.INSTANCE.getNetworkCard());
+        return dev.rsadvanced.feature.connection.NetworkCardSlot.isNetworkCard(stack);
     }
 
     @Override
